@@ -7,10 +7,46 @@
     <Filter Include="Source">
       <UniqueIdentifier>{b5380213-d7b6-4537-8237-a47f6a6e3520}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header\ECSFramework">
+      <UniqueIdentifier>{5fc79bb6-a1c4-4301-b700-7174f3febc66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ECSFramework">
+      <UniqueIdentifier>{f1a960a4-21f5-4dbe-bec9-954014632e95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EngineMain.cpp">
+    <ClCompile Include="MemoryManager.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="EngineMain.cpp" />
+    <ClCompile Include="GameEntity.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="GameComponent.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSystem.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MemoryManager.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEntity.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSystem.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="GameComponent.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
