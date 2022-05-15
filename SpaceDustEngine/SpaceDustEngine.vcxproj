@@ -132,31 +132,38 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>./lib/Lua5.4/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./lib/Lua5.4/include/;./lib/cjson/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>./lib/Lua5.4/x64/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LuaLib-5.4.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./lib/Lua5.4/x64/;./lib/cjson/x64/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LuaLib-5.4.0.lib;cjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DebugModule.cpp" />
     <ClCompile Include="EngineMain.cpp" />
     <ClCompile Include="GameComponent.cpp" />
     <ClCompile Include="GameEntity.cpp" />
+    <ClCompile Include="GameFactory.cpp" />
+    <ClCompile Include="GameRegistry.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="GameSystem.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DebugModule.h" />
     <ClInclude Include="GameComponent.h" />
     <ClInclude Include="GameEntity.h" />
+    <ClInclude Include="GameFactory.h" />
+    <ClInclude Include="GameRegistry.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="GameSystem.h" />
     <ClInclude Include="MemoryManager.h" />
+    <ClInclude Include="VirtualMachine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

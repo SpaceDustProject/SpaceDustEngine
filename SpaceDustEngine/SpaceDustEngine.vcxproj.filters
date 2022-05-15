@@ -31,6 +31,15 @@
     <ClCompile Include="GameSystem.cpp">
       <Filter>Source\ECSFramework</Filter>
     </ClCompile>
+    <ClCompile Include="GameRegistry.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugModule.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameFactory.cpp">
+      <Filter>Source\ECSFramework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryManager.h">
@@ -46,6 +55,18 @@
       <Filter>Header\ECSFramework</Filter>
     </ClInclude>
     <ClInclude Include="GameComponent.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="GameRegistry.h">
+      <Filter>Header\ECSFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualMachine.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugModule.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameFactory.h">
       <Filter>Header\ECSFramework</Filter>
     </ClInclude>
   </ItemGroup>
