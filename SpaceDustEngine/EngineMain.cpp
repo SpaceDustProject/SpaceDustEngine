@@ -1,6 +1,9 @@
 #include "VirtualMachine.h"
 #include "DebugModule.h"
 
+#include "GameRegistry.h"
+#include "GameFactory.h"
+
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -138,6 +141,12 @@ int main(int argc, char* argv[])
 		lua_rawset(pMainVM, -3);
 	}
 	lua_setglobal(pMainVM, "_ENVP");
+
+	// 初始化 GameRegistry
+	GameRegistry::Instance();
+
+	// 初始化 GameFactory
+	GameFactory::Instance();
 
 	// 执行入口脚本文件
 	try

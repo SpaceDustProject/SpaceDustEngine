@@ -15,7 +15,7 @@ class GameFactory::Impl
 public:
 	static int CreateEntityDef(lua_State* pLuaVM)
 	{
-		lua_createtable(pLuaVM, 0, 0);
+		lua_createtable(pLuaVM, 0, 2);
 
 		// SDE_EntityDef AddComponent 方法
 		lua_pushstring(pLuaVM, "AddComponent");
@@ -74,7 +74,7 @@ public:
 		);
 		lua_rawset(pLuaVM, -3);
 
-		// SDL_EntityDef DeleteComponent 方法
+		// SDE_EntityDef DeleteComponent 方法
 		lua_pushstring(pLuaVM, "DeleteComponent");
 		lua_pushcfunction(pLuaVM,
 			[](lua_State* pLuaVM)->int
@@ -102,12 +102,22 @@ public:
 		);
 		lua_rawset(pLuaVM, -3);
 
+		// SDE_EntityDef GetComponent 方法
+		lua_pushstring(pLuaVM, "GetComponent");
+		lua_pushcfunction(pLuaVM,
+			[](lua_State* pLuaVM)->int
+			{
+
+			}
+		);
+
 		return 1;
 	}
 
 	static int CreateSceneDef(lua_State* pLuaVM)
 	{
-
+		lua_createtable(pLuaVM, 0, 2);
+		return 1;
 	}
 
 public:

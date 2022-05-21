@@ -40,6 +40,9 @@
     <ClCompile Include="GameFactory.cpp">
       <Filter>Source\ECSFramework</Filter>
     </ClCompile>
+    <ClCompile Include="VirtualMachine.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryManager.h">
