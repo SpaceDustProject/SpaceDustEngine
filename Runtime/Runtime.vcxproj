@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3e8038b3-ab81-433c-8f71-00c3c4df405e}</ProjectGuid>
-    <RootNamespace>SpaceDustEngine</RootNamespace>
+    <ProjectGuid>{6dcb50b7-870d-4118-83cc-6588c6f4fc5f}</ProjectGuid>
+    <RootNamespace>Runtime</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -132,40 +132,28 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>./lib/Lua5.4/include/;./lib/cjson/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>./lib/cjson/include/;./lib/Lua5.4/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>./lib/Lua5.4/x64/;./lib/cjson/x64/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>./lib/cjson/x64/;./lib/Lua5.4/x64/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>LuaLib-5.4.0.lib;cjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DebugModule.cpp" />
-    <ClCompile Include="EngineMain.cpp" />
-    <ClCompile Include="GameComponent.cpp" />
-    <ClCompile Include="GameEntity.cpp" />
-    <ClCompile Include="GameFactory.cpp" />
-    <ClCompile Include="GameRegistry.cpp" />
-    <ClCompile Include="GameScene.cpp" />
-    <ClCompile Include="GameSystem.cpp" />
-    <ClCompile Include="MemoryManager.cpp" />
-    <ClCompile Include="VirtualMachine.cpp" />
+    <ClCompile Include="SDE_Debug.cpp" />
+    <ClCompile Include="SDE_Main.cpp" />
+    <ClCompile Include="SDE_Settings.cpp" />
+    <ClCompile Include="SDE_VirtualMachine.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DebugModule.h" />
-    <ClInclude Include="GameComponent.h" />
-    <ClInclude Include="GameEntity.h" />
-    <ClInclude Include="GameFactory.h" />
-    <ClInclude Include="GameRegistry.h" />
-    <ClInclude Include="GameScene.h" />
-    <ClInclude Include="GameSystem.h" />
-    <ClInclude Include="MemoryManager.h" />
-    <ClInclude Include="VirtualMachine.h" />
+    <ClInclude Include="SDE_Debug.h" />
+    <ClInclude Include="SDE_Settings.h" />
+    <ClInclude Include="SDE_VirtualMachine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
