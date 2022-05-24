@@ -145,13 +145,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SDE_Data.cpp" />
     <ClCompile Include="SDE_Debug.cpp" />
+    <ClCompile Include="SDE_FileIO.cpp" />
     <ClCompile Include="SDE_Main.cpp" />
+    <ClCompile Include="SDE_MemoryPool.cpp" />
     <ClCompile Include="SDE_Settings.cpp" />
     <ClCompile Include="SDE_VirtualMachine.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SDE_Config.h" />
+    <ClInclude Include="SDE_Data.h" />
     <ClInclude Include="SDE_Debug.h" />
+    <ClInclude Include="SDE_FileIO.h" />
+    <ClInclude Include="SDE_MemoryPool.h" />
     <ClInclude Include="SDE_Settings.h" />
     <ClInclude Include="SDE_VirtualMachine.h" />
   </ItemGroup>

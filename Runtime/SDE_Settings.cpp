@@ -2,8 +2,7 @@
 #include "SDE_Debug.h"
 
 #include <string>
-
-SDE_Settings g_settings = SDE_Settings();
+#include <string.h>
 
 void SDE_Settings::Reset()
 {
@@ -14,14 +13,14 @@ void SDE_Settings::Reset()
 
 bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 {
+	// 重置设置
 	Reset();
 
 	cJSON* pJSONConfigStartScene = nullptr;
 	cJSON* pJSONConfigPackagePath = nullptr;
 	cJSON* pJSONConfigScriptPath = nullptr;
 
-	if (pJSONConfigRoot == nullptr ||
-		pJSONConfigRoot->type != cJSON_Object)
+	if (!pJSONConfigRoot || pJSONConfigRoot->type != cJSON_Object)
 	{
 		SDE_Debug::Instance().OutputLog(
 			"Configuration Error: "
@@ -32,7 +31,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 
 	// 读取开始场景
 	if ((pJSONConfigStartScene = cJSON_GetObjectItem(pJSONConfigRoot, "startScene")) &&
-		pJSONConfigRoot->type == cJSON_String)
+		pJSONConfigStartScene->type == cJSON_String)
 	{
 		strStartScene = pJSONConfigStartScene->valuestring;
 		cJSON_Delete(pJSONConfigStartScene);
@@ -47,7 +46,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 	}
 
 	// 读取包路径
-	if ((pJSONConfigPackagePath = cJSON_GetObjectItem(pJSONConfigPackagePath, "packagePath")) &&
+	if ((pJSONConfigPackagePath = cJSON_GetObjectItem(pJSONConfigRoot, "packagePath")) &&
 		pJSONConfigPackagePath->type == cJSON_Array)
 	{
 		int nArraySize = cJSON_GetArraySize(pJSONConfigPackagePath);
@@ -59,8 +58,8 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 			if ((pJSONConfigPathItem = cJSON_GetArrayItem(pJSONConfigPackagePath, i)) &&
 				pJSONConfigPathItem->type == cJSON_String)
 			{
-				_strPackagePath.append(pJSONConfigPathItem->valuestring);
-				if (i != nArraySize - 1) _strPackagePath.append(";");
+				strPackagePath.append(pJSONConfigPathItem->valuestring);
+				if (i != nArraySize - 1) strPackagePath.append(";");
 				cJSON_Delete(pJSONConfigPathItem);
 			}
 			else
@@ -69,7 +68,6 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 					"Configure Error: "
 					"Invalid package path value on the index of %d.\n", i
 				);
-				return false;
 			}
 		}
 		cJSON_Delete(pJSONConfigPackagePath);
@@ -84,20 +82,19 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 	}
 
 	// 读取脚本路径
-	if (!(pJSONConfigScriptPath = cJSON_GetObjectItem(pJSONConfigScriptPath, "scriptPath"))&&
+	if ((pJSONConfigScriptPath = cJSON_GetObjectItem(pJSONConfigRoot, "scriptPath")) &&
 		pJSONConfigScriptPath->type == cJSON_Array)
 	{
 		int nArraySize = cJSON_GetArraySize(pJSONConfigScriptPath);
 		cJSON* pJSONConfigPathItem = nullptr;
-		std::string _strScriptPath;
 
 		for (int i = 0; i < nArraySize; i++)
 		{
 			if ((pJSONConfigPathItem = cJSON_GetArrayItem(pJSONConfigScriptPath, i)) &&
 				pJSONConfigPathItem->type == cJSON_String)
 			{
-				_strScriptPath.append(pJSONConfigPathItem->valuestring);
-				if (i != nArraySize - 1) _strScriptPath.append(";");
+				strScriptPath.append(pJSONConfigPathItem->valuestring);
+				if (i != nArraySize - 1) strScriptPath.append(";");
 				cJSON_Delete(pJSONConfigPathItem);
 			}
 			else
@@ -106,7 +103,6 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 					"Configure Error: "
 					"Invalid script path value on the index of %d.\n", i
 				);
-				return false;
 			}
 		}
 		cJSON_Delete(pJSONConfigScriptPath);
@@ -127,3 +123,5 @@ SDE_Settings::SDE_Settings()
 {
 	Reset();
 }
+
+SDE_Settings g_settings = SDE_Settings();

@@ -11,6 +11,15 @@
     <ClCompile Include="SDE_VirtualMachine.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="SDE_FileIO.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_MemoryPool.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_Data.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">
@@ -28,6 +37,18 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="SDE_VirtualMachine.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_FileIO.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Data.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_MemoryPool.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Config.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>

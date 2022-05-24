@@ -1,0 +1,11 @@
+{
+    "startScene": "test",
+    "packagePath": [
+        "testP1",
+        "testP2"
+    ],
+    "scriptPath": [
+        "testS1",
+        "testS2"
+    ]
+}
