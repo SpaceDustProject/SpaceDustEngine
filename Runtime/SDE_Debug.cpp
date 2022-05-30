@@ -1,17 +1,14 @@
 #include "SDE_Debug.h"
 
 #include <stdio.h>
-#include <stdarg.h>
+#include <functional>
 
 SDE_Debug::SDE_Debug()
 {
 	// 默认日志输出函数
-	m_funcOutputLog = [](const char* strFormat, ...)->void
+	m_funcOutputLog = [](const char* strFormat, va_list listArgs)->void
 	{
-		va_list listArgs;
-		va_start(listArgs, strFormat);
 		vprintf_s(strFormat, listArgs);
-		va_end(listArgs);
 	};
 }
 
@@ -19,7 +16,7 @@ void SDE_Debug::OutputLog(const char* strFormat, ...)
 {
 	va_list listArgs;
 	va_start(listArgs, strFormat);
-	m_funcOutputLog(strFormat, listArgs);
+	vprintf_s(strFormat, listArgs);
 	va_end(listArgs);
 }
 

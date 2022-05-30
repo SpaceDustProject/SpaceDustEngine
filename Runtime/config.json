@@ -1,11 +1,8 @@
 {
-    "startScene": "test",
-    "packagePath": [
-        "testP1",
-        "testP2"
+    "entry": "test",
+    "path": [
+        "modules/?.dll"
     ],
-    "scriptPath": [
-        "testS1",
-        "testS2"
-    ]
+    "cpath": [],
+    "scriptPath": []
 }

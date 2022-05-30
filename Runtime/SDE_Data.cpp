@@ -48,6 +48,6 @@ SDE_Data::~SDE_Data()
 	if (--m_pImpl->nRefCount <= 0)
 	{
 		m_pImpl->~Impl();
-		g_memoryPool.Allocate(sizeof(Impl));
+		g_memoryPool.Free(m_pImpl, sizeof(Impl));
 	}
 }

@@ -1,4 +1,5 @@
 #include "SDE_Settings.h"
+#include "SDE_Blackboard.h"
 #include "SDE_Debug.h"
 
 #include <string>
@@ -6,16 +7,11 @@
 
 void SDE_Settings::Reset()
 {
-	strStartScene = "SDE_DefaultScene";
-	strPackagePath = "";
-	strScriptPath = "";
+	SDE_Blackboard::Instance().SetValue("entry", "SDE_DefaultScene");
 }
 
 bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 {
-	// 重置设置
-	Reset();
-
 	cJSON* pJSONConfigStartScene = nullptr;
 	cJSON* pJSONConfigPackagePath = nullptr;
 	cJSON* pJSONConfigScriptPath = nullptr;
@@ -30,10 +26,10 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 	}
 
 	// 读取开始场景
-	if ((pJSONConfigStartScene = cJSON_GetObjectItem(pJSONConfigRoot, "startScene")) &&
+	if ((pJSONConfigStartScene = cJSON_GetObjectItem(pJSONConfigRoot, "entry")) &&
 		pJSONConfigStartScene->type == cJSON_String)
 	{
-		strStartScene = pJSONConfigStartScene->valuestring;
+		SDE_Blackboard::Instance().SetValue("entry", pJSONConfigStartScene->valuestring);
 		cJSON_Delete(pJSONConfigStartScene);
 	}
 	else
@@ -46,7 +42,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 	}
 
 	// 读取包路径
-	if ((pJSONConfigPackagePath = cJSON_GetObjectItem(pJSONConfigRoot, "packagePath")) &&
+	if ((pJSONConfigPackagePath = cJSON_GetObjectItem(pJSONConfigRoot, "cpath")) &&
 		pJSONConfigPackagePath->type == cJSON_Array)
 	{
 		int nArraySize = cJSON_GetArraySize(pJSONConfigPackagePath);
@@ -58,8 +54,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 			if ((pJSONConfigPathItem = cJSON_GetArrayItem(pJSONConfigPackagePath, i)) &&
 				pJSONConfigPathItem->type == cJSON_String)
 			{
-				strPackagePath.append(pJSONConfigPathItem->valuestring);
-				if (i != nArraySize - 1) strPackagePath.append(";");
+				_strPackagePath.append(";").append(pJSONConfigPathItem->valuestring);
 				cJSON_Delete(pJSONConfigPathItem);
 			}
 			else
@@ -70,6 +65,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 				);
 			}
 		}
+		SDE_Blackboard::Instance().SetValue("cpath", _strPackagePath.c_str());
 		cJSON_Delete(pJSONConfigPackagePath);
 	}
 	else
@@ -82,19 +78,19 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 	}
 
 	// 读取脚本路径
-	if ((pJSONConfigScriptPath = cJSON_GetObjectItem(pJSONConfigRoot, "scriptPath")) &&
+	if ((pJSONConfigScriptPath = cJSON_GetObjectItem(pJSONConfigRoot, "path")) &&
 		pJSONConfigScriptPath->type == cJSON_Array)
 	{
 		int nArraySize = cJSON_GetArraySize(pJSONConfigScriptPath);
 		cJSON* pJSONConfigPathItem = nullptr;
+		std::string _strScriptPath;
 
 		for (int i = 0; i < nArraySize; i++)
 		{
 			if ((pJSONConfigPathItem = cJSON_GetArrayItem(pJSONConfigScriptPath, i)) &&
 				pJSONConfigPathItem->type == cJSON_String)
 			{
-				strScriptPath.append(pJSONConfigPathItem->valuestring);
-				if (i != nArraySize - 1) strScriptPath.append(";");
+				_strScriptPath.append(";").append(pJSONConfigPathItem->valuestring);
 				cJSON_Delete(pJSONConfigPathItem);
 			}
 			else
@@ -105,6 +101,7 @@ bool SDE_Settings::ParseConfig(cJSON* pJSONConfigRoot)
 				);
 			}
 		}
+		SDE_Blackboard::Instance().SetValue("path", _strScriptPath.c_str());
 		cJSON_Delete(pJSONConfigScriptPath);
 	}
 	else

@@ -6,21 +6,15 @@
 
 struct SDE_Settings
 {
-	std::string strStartScene;		// 开始场景
-	std::string strPackagePath;		// 包路径
-	std::string strScriptPath;		// 脚本路径
-
 	// 重置 SDE 设置
 	void Reset();
 
-	// 解析配置文件修改设置
+	// 解析配置文件
 	bool ParseConfig(cJSON* pJSONConfigRoot);
 
 	SDE_Settings();
 	SDE_Settings(const SDE_Settings&) = default;
 	SDE_Settings& operator=(const SDE_Settings&) = default;
 };
-
-extern SDE_Settings g_settings;
 
 #endif // !_SDE_SETTINGS_H_

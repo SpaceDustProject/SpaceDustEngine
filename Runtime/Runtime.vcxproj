@@ -145,16 +145,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SDE_Blackboard.cpp" />
     <ClCompile Include="SDE_Data.cpp" />
     <ClCompile Include="SDE_Debug.cpp" />
+    <ClCompile Include="SDE_Director.cpp" />
+    <ClCompile Include="SDE_Entity.cpp" />
     <ClCompile Include="SDE_FileIO.cpp" />
     <ClCompile Include="SDE_Main.cpp" />
     <ClCompile Include="SDE_MemoryPool.cpp" />
+    <ClCompile Include="SDE_Scene.cpp" />
     <ClCompile Include="SDE_Settings.cpp" />
+    <ClCompile Include="SDE_System.cpp" />
+    <ClCompile Include="SDE_ThreadPool.cpp" />
     <ClCompile Include="SDE_VirtualMachine.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SDE_Blackboard.h" />
     <ClInclude Include="SDE_Config.h" />
+    <ClInclude Include="SDE_Director.h" />
+    <ClInclude Include="SDE_Entity.h" />
+    <ClInclude Include="SDE_Scene.h" />
+    <ClInclude Include="SDE_System.h" />
+    <ClInclude Include="SDE_ThreadPool.h" />
+    <ClInclude Include="SDE_Timer.h" />
+    <ClInclude Include="SDE_Version.h" />
     <ClInclude Include="SDE_Data.h" />
     <ClInclude Include="SDE_Debug.h" />
     <ClInclude Include="SDE_FileIO.h" />

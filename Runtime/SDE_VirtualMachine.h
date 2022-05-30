@@ -2,12 +2,21 @@
 #define _SDE_VIRTUAL_MACHINE_H_
 
 #include <lua.hpp>
+#include <string>
+
+class SDE_Data;
 
 class SDE_VirtualMachine
 {
 public:
-	// 获取 Lua 虚拟主机
-	static lua_State* GetMainVM();
+	
+	bool RunScript(lua_State* pState, const SDE_Data& dataScript);
+
+	bool AddPath(lua_State* pState, const std::string& strPath);
+	bool DeletePath(lua_State* pState, const std::string& strPath);
+
+	bool AddCPath(lua_State* pState, const std::string& strCPath);
+	bool DeleteCPath(lua_State* pState, const std::string& strCPath);
 
 public:
 	~SDE_VirtualMachine();
@@ -21,5 +30,7 @@ public:
 private:
 	SDE_VirtualMachine();
 };
+
+extern lua_State* g_pMainVM;
 
 #endif // !_SDE_VIRTUAL_MACHINE_H_

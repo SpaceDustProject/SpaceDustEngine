@@ -20,6 +20,24 @@
     <ClCompile Include="SDE_Data.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="SDE_Blackboard.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_Director.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_ThreadPool.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_Entity.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_Scene.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_System.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">
@@ -28,28 +46,64 @@
     <Filter Include="Source">
       <UniqueIdentifier>{f856443c-0f67-442e-b6f3-e308ed3865c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header\SDE_Macro">
+      <UniqueIdentifier>{49f3bbfc-2a5b-4bb9-8666-f402b98692e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\SDE_Framework">
+      <UniqueIdentifier>{86862d46-0601-452a-8ff6-63984a25cfb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\SDE_Module">
+      <UniqueIdentifier>{cce4f51a-9e60-43bd-bfd3-ad4c4c3faf29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\SDE_Object">
+      <UniqueIdentifier>{55d9857a-a765-4c5f-bf98-8f7e071894aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SDE_Settings.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="SDE_Config.h">
+      <Filter>Header\SDE_Macro</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Version.h">
+      <Filter>Header\SDE_Macro</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Blackboard.h">
+      <Filter>Header\SDE_Module</Filter>
     </ClInclude>
     <ClInclude Include="SDE_Debug.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="SDE_VirtualMachine.h">
-      <Filter>Header</Filter>
+      <Filter>Header\SDE_Module</Filter>
     </ClInclude>
     <ClInclude Include="SDE_FileIO.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="SDE_Data.h">
-      <Filter>Header</Filter>
+      <Filter>Header\SDE_Module</Filter>
     </ClInclude>
     <ClInclude Include="SDE_MemoryPool.h">
-      <Filter>Header</Filter>
+      <Filter>Header\SDE_Module</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_Config.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="SDE_VirtualMachine.h">
+      <Filter>Header\SDE_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Settings.h">
+      <Filter>Header\SDE_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Data.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Director.h">
+      <Filter>Header\SDE_Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Timer.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Entity.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_System.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_ThreadPool.h">
+      <Filter>Header\SDE_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Scene.h">
+      <Filter>Header\SDE_Object</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

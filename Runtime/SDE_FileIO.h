@@ -3,14 +3,16 @@
 
 #include "SDE_Data.h"
 
+#include <string>
+
 class SDE_FileIO
 {
 public:
 	// 读取指定文件构造 SDE_Data 对象
-	SDE_Data Input(const char* strFileName, bool isBinary = true);
+	SDE_Data Input(const std::string& strFileName, bool isBinary = true);
 
 	// 将 SDE_Data 对象写为指定文件
-	void Output(const char* strFileName, const SDE_Data& dataWritten, bool isBinary = true);
+	void Output(const std::string& strFileName, const SDE_Data& dataWritten, bool isBinary = true);
 
 private:
 	class Impl;

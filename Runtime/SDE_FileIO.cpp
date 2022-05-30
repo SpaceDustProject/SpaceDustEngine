@@ -17,7 +17,7 @@ public:
 	}
 };
 
-SDE_Data SDE_FileIO::Input(const char* strFileName, bool isBinary)
+SDE_Data SDE_FileIO::Input(const std::string& strFileName, bool isBinary)
 {
 	if (!isBinary) m_pImpl->m_finStream.open(strFileName, std::ios_base::in);
 	else m_pImpl->m_finStream.open(strFileName, std::ios_base::in, std::ios_base::binary);
@@ -47,7 +47,7 @@ SDE_Data SDE_FileIO::Input(const char* strFileName, bool isBinary)
 	return { pData, nSize };
 }
 
-void SDE_FileIO::Output(const char* strFileName, const SDE_Data& dataWritten, bool isBinary)
+void SDE_FileIO::Output(const std::string& strFileName, const SDE_Data& dataWritten, bool isBinary)
 {
 	if (!isBinary) m_pImpl->m_finStream.open(strFileName, std::ios_base::out);
 	else m_pImpl->m_finStream.open(strFileName, std::ios_base::out, std::ios_base::binary);

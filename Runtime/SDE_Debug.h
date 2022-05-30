@@ -1,7 +1,9 @@
 #ifndef _SDE_DEBUG_H_
 #define _SDE_DEBUG_H_
 
-typedef void(*SDE_OutputFunc)(const char*, ...);
+#include <stdarg.h>
+
+typedef void(*SDE_OutputFunc)(const char*, va_list);
 
 class SDE_Debug
 {
