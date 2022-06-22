@@ -6,11 +6,9 @@
 #include <string>
 #include <filesystem>
 
-#include <stdio.h>
-
 bool SDE_VirtualMachine::RunScript(lua_State* pState, const SDE_Data& dataScript)
 {
-	switch (luaL_loadbuffer(pState, dataScript.GetData(), dataScript.GetSize(), nullptr))
+	switch (luaL_loadstring(pState, dataScript.GetData()))
 	{
 	case LUA_OK:
 		lua_pcall(pState, 0, LUA_MULTRET, 0);
@@ -86,14 +84,14 @@ bool SDE_VirtualMachine::DeletePath(lua_State* pState, const std::string& strPat
 	size_t nIndex = strPackagePath.find(strPath);
 	if (nIndex == strPackagePath.npos)
 	{
-		lua_pop(g_pMainVM, 2);
+		lua_pop(pState, 2);
 		return false;
 	}
 
 	strPackagePath.erase(nIndex - 1, strPath.size() + 1);
-	lua_pushstring(g_pMainVM, strPackagePath.c_str());
-	lua_setfield(g_pMainVM, -3, "path");
-	lua_pop(g_pMainVM, 2);
+	lua_pushstring(pState, strPackagePath.c_str());
+	lua_setfield(pState, -3, "path");
+	lua_pop(pState, 2);
 
 	return true;
 }
@@ -124,44 +122,19 @@ bool SDE_VirtualMachine::DeleteCPath(lua_State* pState, const std::string& strCP
 	size_t nIndex = strPackageCPath.find(strCPath);
 	if (nIndex == strPackageCPath.npos)
 	{
-		lua_pop(g_pMainVM, 2);
+		lua_pop(pState, 2);
 		return false;
 	}
 
 	strPackageCPath.erase(nIndex - 1, strCPath.size() + 1);
-	lua_pushstring(g_pMainVM, strPackageCPath.c_str());
-	lua_setfield(g_pMainVM, -3, "cpath");
-	lua_pop(g_pMainVM, 2);
+	lua_pushstring(pState, strPackageCPath.c_str());
+	lua_setfield(pState, -3, "cpath");
+	lua_pop(pState, 2);
 
 	return true;
 }
 
-SDE_VirtualMachine::SDE_VirtualMachine()
+void SDE_VirtualMachine::GetGlobal(lua_State* pState)
 {
-	g_pMainVM = luaL_newstate();
-	luaL_openlibs(g_pMainVM);
-	lua_gc(g_pMainVM, LUA_GCINC, 100);
-
-	// 向 path 中添加脚本路径
-	lua_getglobal(g_pMainVM, "package");
-	lua_getfield(g_pMainVM, -1, "path");
-	std::string _strPackagePath = lua_tostring(g_pMainVM, -1);
-	lua_pushstring(g_pMainVM, _strPackagePath.c_str());
-	lua_setfield(g_pMainVM, -3, "path");
-	lua_pop(g_pMainVM, 2);
-
-	// 向 cpath 中添加包路径
-	lua_getglobal(g_pMainVM, "package");
-	lua_getfield(g_pMainVM, -1, "cpath");
-	std::string _strScriptPath = lua_tostring(g_pMainVM, -1);
-	lua_pushstring(g_pMainVM, _strScriptPath.c_str());
-	lua_setfield(g_pMainVM, -3, "cpath");
-	lua_pop(g_pMainVM, 2);
+	lua_getfield(pState, LUA_REGISTRYINDEX, "SDE_Global");
 }
-
-SDE_VirtualMachine::~SDE_VirtualMachine()
-{
-	lua_close(g_pMainVM);
-}
-
-lua_State* g_pMainVM = nullptr;

@@ -38,6 +38,9 @@
     <ClCompile Include="SDE_System.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="SDE_Component.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">
@@ -48,9 +51,6 @@
     </Filter>
     <Filter Include="Header\SDE_Macro">
       <UniqueIdentifier>{49f3bbfc-2a5b-4bb9-8666-f402b98692e3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header\SDE_Framework">
-      <UniqueIdentifier>{86862d46-0601-452a-8ff6-63984a25cfb1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header\SDE_Module">
       <UniqueIdentifier>{cce4f51a-9e60-43bd-bfd3-ad4c4c3faf29}</UniqueIdentifier>
@@ -87,9 +87,6 @@
     <ClInclude Include="SDE_Data.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_Director.h">
-      <Filter>Header\SDE_Framework</Filter>
-    </ClInclude>
     <ClInclude Include="SDE_Timer.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
@@ -103,6 +100,12 @@
       <Filter>Header\SDE_Module</Filter>
     </ClInclude>
     <ClInclude Include="SDE_Scene.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Director.h">
+      <Filter>Header\SDE_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Component.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
   </ItemGroup>

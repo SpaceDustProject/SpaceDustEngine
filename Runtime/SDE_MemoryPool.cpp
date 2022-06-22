@@ -2,22 +2,20 @@
 
 #include <string.h>
 
-// 单个区块的内存大小
-static const int s_nChunkSize = 16 * 1024;
-
-// 开辟新区块时单次开辟的区块总数
-static const int s_nChunkIncrement = 128;
-
-// 不同内存块大小的区块种类总数
-static const int s_nChunkSizeCount = 5;
+static const int s_nChunkSize = 16 * 1024;	// 单个区块的内存大小
+static const int s_nChunkIncrement = 128;	// 开辟新区块时单次开辟的区块总数
+static const int s_nChunkSizeCount = 5;		// 不同内存块大小的区块种类总数
+static const int s_nMaxBlockSize = 256;		// 内存块最大尺寸
 
 // 所有种类区块的内存块大小
-static const int s_arrBlockSize[s_nChunkSizeCount] = {
-	16, 32, 64, 128, 256
+static const int s_arrBlockSize[s_nChunkSizeCount] =
+{
+	16,
+	32,
+	64,
+	128,
+	256
 };
-
-// 内存块最大尺寸
-static const int s_nMaxBlockSize = 256;
 
 class SDE_MemoryPool::Impl
 {

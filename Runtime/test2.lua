@@ -1,1 +1,0 @@
-print("Hello SDE, here is test2.lua")

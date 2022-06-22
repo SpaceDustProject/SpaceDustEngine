@@ -4,16 +4,15 @@
 #include "SDE_Director.h"
 #include "SDE_FileIO.h"
 
+#include <iostream>
+
 int main(int argc, char* argv[])
 {
 	SDE_Blackboard::Instance().SetValue("SDE_FRAME_RATE", 60.0f);
 
-	SDE_VirtualMachine::Instance();
-
-	if (!SDE_Director::Instance().Run())
-	{
-		return false;
-	}
+	SDE_Data dataScript = SDE_FileIO::Instance().Input("test.lua");
+	SDE_VirtualMachine::Instance().RunScript(g_director.GetLuaVM(), dataScript);
+	g_director.Run();
 
 	return 0;
 }

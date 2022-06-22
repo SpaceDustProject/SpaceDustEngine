@@ -146,6 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SDE_Blackboard.cpp" />
+    <ClCompile Include="SDE_Component.cpp" />
     <ClCompile Include="SDE_Data.cpp" />
     <ClCompile Include="SDE_Debug.cpp" />
     <ClCompile Include="SDE_Director.cpp" />
@@ -161,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SDE_Blackboard.h" />
+    <ClInclude Include="SDE_Component.h" />
     <ClInclude Include="SDE_Config.h" />
     <ClInclude Include="SDE_Director.h" />
     <ClInclude Include="SDE_Entity.h" />
