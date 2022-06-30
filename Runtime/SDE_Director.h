@@ -10,27 +10,27 @@ class SDE_Director
 public:
 	bool				Run();											// 运行
 
-	SDE_Scene*			GetScene();										// 获取当前运行场景
-	SDE_Scene*			SwitchScene(const SDE_Scene::Def& defScene);	// 切换当前场景
-
 	lua_State*			GetLuaVM();										// 获取内部虚拟机
 	SDE_MemoryPool*		GetMemoryPool();								// 获取内部内存池
 
-	SDE_Entity::Def*	GetEntityDef(const std::string& strName);
-	void				RegisterEntityDef(const std::string& strName, SDE_Entity::Def* pDefEntity);
-	bool				UnregisterEntityDef(const std::string& strName);
+	SDE_Scene*			GetScene();										// 获取当前运行场景
+	SDE_Scene*			SwitchScene(SDE_Scene::Def* pDefScene);			// 切换当前场景
 
-	SDE_Component::Def*	GetComponentDef(const std::string& strName);
-	void				RegisterComponentDef(const std::string& strName, const SDE_Component::Def& defComponent);
-	bool				UnregisterComponentDef(const std::string& strName);
+	SDE_Entity::Def*	GetEntityDef(const std::string& strType);
+	SDE_Entity::Def*	CreateEntityDef(const std::string& strType);
+	bool				DestroyEntityDef(const std::string& strType);
 
-	SDE_System::Def*	GetSystemDef(const std::string& strName);
-	void				RegisterSystemDef(const std::string& strName, const SDE_System::Def& defSystem);
-	bool				UnregisterSystemDef(const std::string& strName);
+	SDE_Component::Def*	GetComponentDef(const std::string& strType);
+	SDE_Component::Def*	CreateComponentDef(const std::string& strType);
+	bool				DestroyComponentDef(const std::string& strType);
 
-	SDE_Scene::Def*		GetSceneDef(const std::string& strName);
-	void				RegisterSceneDef(const std::string& strName, SDE_Scene::Def* pDefScene);
-	bool				UnregisterSceneDef(const std::string& strName);
+	SDE_System::Def*	GetSystemDef(const std::string& strType);
+	SDE_System::Def*	CreateSystemDef(const std::string& strType);
+	bool				DestroySystemDef(const std::string& strType);
+
+	SDE_Scene::Def*		GetSceneDef(const std::string& strType);
+	SDE_Scene::Def*		CreateSceneDef(const std::string& strType);
+	bool				DestroySceneDef(const std::string& strType);
 
 private:
 	class Impl;
@@ -41,7 +41,7 @@ public:
 	~SDE_Director();
 };
 
-extern SDE_Director g_director;
 extern luaL_Reg g_funcDirectorMember[];
+extern SDE_Director g_director;
 
 #endif // !_SDE_DIRECTOR_H_

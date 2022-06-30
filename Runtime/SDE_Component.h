@@ -8,25 +8,30 @@
 #include <string>
 
 class SDE_Entity;
+class SDE_Scene;
 
 class SDE_Component
 {
 public:
 	struct Def
 	{
-		std::string strName;
+		std::string strType;
 	};
 
-	SDE_Entity* GetEntity();
+	SDE_Entity*			GetEntity();
+	const std::string&	GetType();
+	int					GetRef();
 
 private:
-	lua_Integer m_nID;
-	std::string m_strName;
+	SDE_Entity* m_pEntity;
+	std::string m_strType;
+	int			m_nRef;
 
 private:
-	SDE_Component(SDE_Entity* pEntity, const Def& defComponent);
+	SDE_Component(Def* defComponent);
 	~SDE_Component();
 
+	friend class SDE_Entity;
 	friend class SDE_Scene;
 };
 

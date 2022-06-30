@@ -19,43 +19,51 @@ bool SDE_VirtualMachine::RunScript(lua_State* pState, const SDE_Data& dataScript
 			"Script Running Error: "
 			"Syntax error during precompiling.\n"
 		);
-		return false;
+		break;
 
 	case LUA_ERRMEM:
 		SDE_Debug::Instance().OutputLog(
 			"Script Running Error: "
 			"Memory allocation error.\n"
 		);
-		return false;
+		break;
 
 	case LUA_ERRRUN:
 		SDE_Debug::Instance().OutputLog(
 			"Script Running Error: "
 			"Runtime error.\n"
 		);
-		return false;
+		break;
 
 	case LUA_ERRERR:
 		SDE_Debug::Instance().OutputLog(
 			"Script Running Error: "
 			"Error while running the message handler.\n"
 		);
-		return false;
+		break;
 
 	case LUA_ERRFILE:
 		SDE_Debug::Instance().OutputLog(
 			"Script Running Error: "
 			"A file-related error occurred.\n"
 		);
-		return false;
+		break;
 
 	default:
 		SDE_Debug::Instance().OutputLog(	
 			"Script Running Error: "
 			"An unknown error occurred.\n"
 		);
-		return false;
+		break;
 	}
+
+	SDE_Debug::Instance().OutputLog(
+		"Error message:\n"
+		"%s\n",
+		luaL_checkstring(pState, -1)
+	);
+
+	return false;
 }
 
 bool SDE_VirtualMachine::AddPath(lua_State* pState, const std::string& strPath)

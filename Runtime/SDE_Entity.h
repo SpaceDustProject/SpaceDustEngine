@@ -6,7 +6,7 @@
 
 #include "SDE_Component.h"
 
-#include <initializer_list>
+#include <list>
 
 class SDE_Scene;
 
@@ -15,24 +15,21 @@ class SDE_Entity
 public:
 	struct Def
 	{
-		std::initializer_list<SDE_Component::Def> listDefComponent;
+		std::string						strType;
+		std::list<SDE_Component::Def*>	listDefComponent;
 	};
 
-	lua_Integer GetID();
-	SDE_Scene*	GetScene();
+	SDE_Scene*		GetScene();
 
-	lua_Integer AddComponent(const SDE_Component::Def& defComponent);
-	bool		DeleteComponent(lua_Integer nID);
-
-private:
-	void		SetID(lua_Integer nID);
+	SDE_Component*	AddComponent(SDE_Component::Def* defComponent);
+	bool			DeleteComponent(SDE_Component* pComponent);
 
 private:
 	class Impl;
 	Impl* m_pImpl;
 
 private:
-	SDE_Entity(SDE_Scene* pScene, const Def& defEntity);
+	SDE_Entity(SDE_Scene* pScene, Def* defEntity);
 	~SDE_Entity();
 
 	friend class SDE_Scene;

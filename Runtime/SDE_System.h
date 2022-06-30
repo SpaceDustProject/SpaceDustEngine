@@ -14,10 +14,10 @@ class SDE_System
 public:
 	struct Def
 	{
-		std::string strName;
+		std::string strType;
 	};
 
-	const std::string&	GetName();
+	const std::string&	GetType();
 	SDE_Scene*			GetScene();
 
 	int					GetInitRef();
@@ -25,7 +25,7 @@ public:
 	int					GetQuitRef();
 
 private:
-	std::string m_strName;		// System 的名称
+	std::string m_strType;		// System 的种类
 	SDE_Scene*	m_pScene;		// System 所属的场景
 
 	int			m_nRefInit;		// System 初始化函数索引
@@ -33,7 +33,7 @@ private:
 	int			m_nRefQuit;		// System 退出函数索引
 
 private:
-	SDE_System(SDE_Scene* pScene, const SDE_System::Def& defSystem);
+	SDE_System(SDE_Scene* pScene, Def* defSystem);
 	~SDE_System();
 
 	friend class SDE_Scene;

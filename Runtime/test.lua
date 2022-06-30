@@ -1,5 +1,12 @@
-defScene = SDE_Director.CreateSceneDef()
-SDE_Director.RegisterSceneDef("aDef", defScene)
+print("Here is test.lua")
 
-defScene2 = SDE_Director.GetSceneDef("aDef")
-SDE_Director.UnregisterSceneDef("aDef")
+SDE_Director.CreateSceneDef("testScene")
+SDE_Director.CreateSystemDef("testSystem")
+
+local sceneDef = SDE_Director.GetSceneDef("testScene")
+local systemDef = SDE_Director.GetSystemDef("testSystem")
+
+--sceneDef:AddSystemDef(systemDef)
+
+aMeta = getmetatable(sceneDef)
+print(aMeta.__name)

@@ -17,11 +17,11 @@ SDE_Director g_director;
 class SDE_Director::Impl
 {
 public:
-	SDE_MemoryPool* m_pMemoryPool;												// 内部内存池
-	lua_State*		m_pLuaVM;													// 内部 Lua 虚拟机
+	SDE_MemoryPool*		m_pMemoryPool;											// 内部内存池
+	lua_State*			m_pLuaVM;												// 内部 Lua 虚拟机
 
-	bool			m_isQuit = false;											// 是否退出
-	SDE_Scene*		m_pRunningScene = nullptr;									// 当前正在运行的场景
+	bool				m_isQuit = false;										// 是否退出
+	SDE_Scene*			m_pRunningScene = nullptr;								// 当前正在运行的场景
 
 	std::unordered_map<std::string, SDE_Entity::Def*>		m_mapEntityDef;		// 已注册的实体
 	std::unordered_map<std::string, SDE_Component::Def*>	m_mapComponentDef;	// 已注册的组件
@@ -45,7 +45,7 @@ public:
 		lua_createtable(m_pLuaVM, 0, 2);
 		{
 			// 新建 SDE 注册表
-			lua_createtable(m_pLuaVM, 0, 2);
+			lua_createtable(m_pLuaVM, 0, 4);
 			{
 				// 创建实体注册表
 				lua_newtable(m_pLuaVM);
@@ -66,7 +66,7 @@ public:
 			lua_setfield(m_pLuaVM, -2, "Registry");
 
 			// 新建 SDE 运行环境
-			lua_createtable(m_pLuaVM, 0, 1);
+			lua_createtable(m_pLuaVM, 0, 2);
 			{
 				lua_newtable(m_pLuaVM);
 				lua_setfield(m_pLuaVM, -2, "Component");
@@ -74,7 +74,7 @@ public:
 				lua_newtable(m_pLuaVM);
 				{
 					lua_newtable(m_pLuaVM);
-					lua_setfield(m_pLuaVM, -2, "OnInt");
+					lua_setfield(m_pLuaVM, -2, "OnInit");
 
 					lua_newtable(m_pLuaVM);
 					lua_setfield(m_pLuaVM, -2, "OnUpdate");
@@ -157,16 +157,6 @@ public:
 			lua_newtable(m_pLuaVM);
 			luaL_setfuncs(m_pLuaVM, g_funcSceneDefMember, 0);
 			lua_setfield(m_pLuaVM, -2, "__index");
-
-			lua_pushcfunction(m_pLuaVM, 
-				[](lua_State* pState)->int
-				{
-					SDE_Scene::Def* pDefScene = (SDE_Scene::Def*)luaL_checkudata(pState, 1, SDE_SCENEDEF_NAME);
-					pDefScene->~Def();
-					return 0;
-				}
-			);
-			lua_setfield(m_pLuaVM, -2, "__gc");
 		}
 		lua_pop(m_pLuaVM, 1);
 
@@ -178,8 +168,11 @@ public:
 	~Impl()
 	{
 		// 析构场景
-		m_pRunningScene->~SDE_Scene();
-		m_pMemoryPool->Free(m_pRunningScene, sizeof(SDE_Scene));
+		if (m_pRunningScene)
+		{
+			m_pRunningScene->~SDE_Scene();
+			m_pMemoryPool->Free(m_pRunningScene, sizeof(SDE_Scene));
+		}
 
 		// 关闭虚拟机
 		lua_close(m_pLuaVM);
@@ -191,6 +184,15 @@ public:
 
 bool SDE_Director::Run()
 {
+	if (!m_pImpl->m_pRunningScene)
+	{
+		SDE_Debug::Instance().OutputLog(
+			"Director Running Error: "
+			"No running scene specified.\n"
+		);
+		return false;
+	}
+
 	std::chrono::steady_clock::time_point t1;		// 单帧工作起始点
 	std::chrono::steady_clock::time_point t2;		// 单帧工作结束点 & 单帧睡眠起始点
 	std::chrono::steady_clock::time_point t3;		// 单帧睡眠结束点
@@ -206,8 +208,8 @@ bool SDE_Director::Run()
 	while (!m_pImpl->m_isQuit)
 	{
 		t1 = std::chrono::steady_clock::now();
+
 		m_pImpl->m_pRunningScene->Step();
-		t2 = std::chrono::steady_clock::now();
 
 		if (!SDE_Blackboard::Instance().GetNumber("SDE_FRAME_RATE", fFrameRate) ||
 			fFrameRate <= 0.0f)
@@ -218,6 +220,8 @@ bool SDE_Director::Run()
 			);
 			return false;
 		}
+
+		t2 = std::chrono::steady_clock::now();
 
 		dUsedTime = t2 - t1;
 		dTargetTime = std::chrono::duration<double>(1.0 / fFrameRate);
@@ -251,7 +255,7 @@ SDE_Scene* SDE_Director::GetScene()
 	return m_pImpl->m_pRunningScene;
 }
 
-SDE_Scene* SDE_Director::SwitchScene(const SDE_Scene::Def& defScene)
+SDE_Scene* SDE_Director::SwitchScene(SDE_Scene::Def* pDefScene)
 {
 	if (m_pImpl->m_pRunningScene)
 	{
@@ -260,94 +264,105 @@ SDE_Scene* SDE_Director::SwitchScene(const SDE_Scene::Def& defScene)
 	}
 
 	void* pMem = m_pImpl->m_pMemoryPool->Allocate(sizeof(SDE_Scene));
-	SDE_Scene* pScene = new (pMem) SDE_Scene(this, defScene);
-	m_pImpl->m_pRunningScene = pScene;
+	SDE_Scene* pScene = new (pMem) SDE_Scene(this, pDefScene);
 
+	m_pImpl->m_pRunningScene = pScene;
 	return pScene;
 }
 
-SDE_Entity::Def* SDE_Director::GetEntityDef(const std::string& strName)
+SDE_Entity::Def* SDE_Director::GetEntityDef(const std::string& strType)
 {
-	return m_pImpl->m_mapEntityDef[strName];
+	return m_pImpl->m_mapEntityDef[strType];
 }
 
-void SDE_Director::RegisterEntityDef(const std::string& strName, SDE_Entity::Def* pDefEntity)
+SDE_Entity::Def* SDE_Director::CreateEntityDef(const std::string& strType)
 {
-	
+	return nullptr;
 }
 
-bool SDE_Director::UnregisterEntityDef(const std::string& strName)
+bool SDE_Director::DestroyEntityDef(const std::string& strType)
 {
-	if (m_pImpl->m_mapEntityDef.find(strName) != m_pImpl->m_mapEntityDef.end())
+	if (m_pImpl->m_mapEntityDef.find(strType) != m_pImpl->m_mapEntityDef.end())
 	{
-		m_pImpl->m_mapEntityDef.erase(strName);
+		m_pImpl->m_mapEntityDef.erase(strType);
 		return true;
 	}
 	return false;
 }
 
-SDE_Component::Def* SDE_Director::GetComponentDef(const std::string& strName)
+SDE_Component::Def* SDE_Director::GetComponentDef(const std::string& strType)
 {
-	return m_pImpl->m_mapComponentDef[strName];
+	return m_pImpl->m_mapComponentDef[strType];
 }
 
-void SDE_Director::RegisterComponentDef(const std::string& strName, const SDE_Component::Def& defComponent)
+SDE_Component::Def* SDE_Director::CreateComponentDef(const std::string& strType)
 {
-
+	return nullptr;
 }
 
-bool SDE_Director::UnregisterComponentDef(const std::string& strName)
+bool SDE_Director::DestroyComponentDef(const std::string& strType)
 {
-	if (m_pImpl->m_mapComponentDef.find(strName) != m_pImpl->m_mapComponentDef.end())
+	if (m_pImpl->m_mapComponentDef.find(strType) != m_pImpl->m_mapComponentDef.end())
 	{
-		m_pImpl->m_mapComponentDef.erase(strName);
+		m_pImpl->m_mapComponentDef.erase(strType);
 		return true;
 	}
 	return false;
 }
 
-SDE_System::Def* SDE_Director::GetSystemDef(const std::string& strName)
+SDE_System::Def* SDE_Director::GetSystemDef(const std::string& strType)
 {
-	return m_pImpl->m_mapSystemDef[strName];
+	return m_pImpl->m_mapSystemDef[strType];
 }
 
-void SDE_Director::RegisterSystemDef(const std::string& strName, const SDE_System::Def& defSystem)
+SDE_System::Def* SDE_Director::CreateSystemDef(const std::string& strType)
 {
-
+	void* pMem = m_pImpl->m_pMemoryPool->Allocate(sizeof(SDE_System::Def));
+	SDE_System::Def* pDefSystem = new (pMem) SDE_System::Def({ strType });
+	m_pImpl->m_mapSystemDef[strType] = pDefSystem;
+	return pDefSystem;
 }
 
-bool SDE_Director::UnregisterSystemDef(const std::string& strName)
+bool SDE_Director::DestroySystemDef(const std::string& strType)
 {
-	if (m_pImpl->m_mapSystemDef.find(strName) != m_pImpl->m_mapSystemDef.end())
+	std::unordered_map<std::string, SDE_System::Def*>::iterator iterSystemDef =
+		m_pImpl->m_mapSystemDef.begin();
+
+	if (iterSystemDef != m_pImpl->m_mapSystemDef.end())
 	{
-		m_pImpl->m_mapSceneDef.erase(strName);
+		(*iterSystemDef).second->~Def();
+		m_pImpl->m_pMemoryPool->Free((*iterSystemDef).second, sizeof(SDE_System::Def));
+
+		m_pImpl->m_mapSystemDef.erase(iterSystemDef);
 		return true;
 	}
 	return false;
 }
 
-SDE_Scene::Def* SDE_Director::GetSceneDef(const std::string& strName)
+SDE_Scene::Def* SDE_Director::GetSceneDef(const std::string& strType)
 {
-	return m_pImpl->m_mapSceneDef[strName];
+	return m_pImpl->m_mapSceneDef[strType];
 }
 
-void SDE_Director::RegisterSceneDef(const std::string& strName, SDE_Scene::Def* pDefScene)
+SDE_Scene::Def* SDE_Director::CreateSceneDef(const std::string& strType)
 {
 	void* pMem = m_pImpl->m_pMemoryPool->Allocate(sizeof(SDE_Scene::Def));
-	SDE_Scene::Def* pDefSceneCopy = new (pMem) SDE_Scene::Def(*pDefScene);
-	m_pImpl->m_mapSceneDef[strName] = pDefSceneCopy;
+	SDE_Scene::Def* pDefScene = new (pMem) SDE_Scene::Def({ strType });
+	m_pImpl->m_mapSceneDef[strType] = pDefScene;
+	return pDefScene;
 }
 
-bool SDE_Director::UnregisterSceneDef(const std::string& strName)
+bool SDE_Director::DestroySceneDef(const std::string& strType)
 {
-	std::unordered_map<std::string, SDE_Scene::Def*>::iterator iter =
-		m_pImpl->m_mapSceneDef.find(strName);
+	std::unordered_map<std::string, SDE_Scene::Def*>::iterator iterSceneDef =
+		m_pImpl->m_mapSceneDef.find(strType);
 
-	if (iter != m_pImpl->m_mapSceneDef.end())
+	if (iterSceneDef != m_pImpl->m_mapSceneDef.end())
 	{
-		(*iter).second->~Def();
-		m_pImpl->m_pMemoryPool->Free((*iter).second, sizeof(SDE_Scene::Def));
-		m_pImpl->m_mapSceneDef.erase(iter);
+		(*iterSceneDef).second->~Def();
+		m_pImpl->m_pMemoryPool->Free((*iterSceneDef).second, sizeof(SDE_Scene::Def));
+
+		m_pImpl->m_mapSceneDef.erase(iterSceneDef);
 		return true;
 	}
 	return false;
@@ -356,9 +371,6 @@ bool SDE_Director::UnregisterSceneDef(const std::string& strName)
 SDE_Director::SDE_Director()
 {
 	m_pImpl = new Impl();
-
-	// 设置空转场景
-	SwitchScene({});
 }
 
 SDE_Director::~SDE_Director()
@@ -368,137 +380,161 @@ SDE_Director::~SDE_Director()
 
 SDE_API SDE_Director_GetEntityDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushlightuserdata(pState, g_director.GetEntityDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.GetEntityDef(strType));
+	luaL_setmetatable(pState, SDE_ENTITYDEF_NAME);
 	return 1;
 }
 
-SDE_API SDE_Director_RegisterEntityDef(lua_State* pState)
+SDE_API SDE_Director_CreateEntityDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	SDE_Entity::Def* pDefEntity = (SDE_Entity::Def*)luaL_checkudata(pState, 2, SDE_ENTITYDEF_NAME);
-	g_director.RegisterEntityDef(strName, pDefEntity);
-	return 0;
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.CreateEntityDef(strType));
+	luaL_setmetatable(pState, SDE_ENTITYDEF_NAME);
+	return 1;
 }
 
-SDE_API SDE_Director_UnregisterEntityDef(lua_State* pState)
+SDE_API SDE_Director_DestroyEntityDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushboolean(pState, g_director.UnregisterEntityDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushboolean(pState, g_director.DestroyEntityDef(strType));
 	return 1;
 }
 
 SDE_API SDE_Director_GetComponentDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushlightuserdata(pState, g_director.GetComponentDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.GetComponentDef(strType));
+	luaL_setmetatable(pState, SDE_COMPONENTDEF_NAME);
 	return 1;
 }
 
-SDE_API SDE_Director_RegisterComponentDef(lua_State* pState)
+SDE_API SDE_Director_CreateComponentDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	SDE_Component::Def* pDefComponent = (SDE_Component::Def*)luaL_checkudata(pState, 2, SDE_COMPONENTDEF_NAME);
-	g_director.RegisterComponentDef(strName, *pDefComponent);
-	return 0;
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.CreateComponentDef(strType));
+	luaL_setmetatable(pState, SDE_COMPONENTDEF_NAME);
+	return 1;
 }
 
-SDE_API SDE_Director_UnregisterComponentDef(lua_State* pState)
+SDE_API SDE_Director_DestroyComponentDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushboolean(pState, g_director.UnregisterComponentDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushboolean(pState, g_director.DestroyComponentDef(strType));
 	return 1;
 }
 
 SDE_API SDE_Director_GetSystemDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushlightuserdata(pState, g_director.GetSystemDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.GetSystemDef(strType));
 	return 1;
 }
 
-SDE_API SDE_Director_RegisterSystemDef(lua_State* pState)
+SDE_API SDE_Director_CreateSystemDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	SDE_System::Def* pDefSystem = (SDE_System::Def*)luaL_checkudata(pState, 2, SDE_SYSTEMDEF_NAME);
-	g_director.RegisterSystemDef(strName, *pDefSystem);
-	return 0;
-}
+	std::string strType = luaL_checkstring(pState, 1);
 
-SDE_API SDE_Director_UnregisterSystemDef(lua_State* pState)
-{
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushboolean(pState, g_director.UnregisterSystemDef(strName));
+	// 在 SDE_Registry System 中为其创建空表
+	SDE_VirtualMachine::Instance().GetGlobal(pState);
+	lua_getfield(pState, -1, "Registry");
+	lua_getfield(pState, -1, "System");
+	lua_createtable(pState, 0, 3);
+	lua_setfield(pState, -2, strType.c_str());
+
+	lua_pushlightuserdata(pState, g_director.CreateSystemDef(strType));
+	luaL_setmetatable(pState, SDE_SYSTEMDEF_NAME);
+
 	return 1;
 }
 
-SDE_API SDE_Director_CreateSceneDef(lua_State* pState)
+SDE_API SDE_Director_DestroySystemDef(lua_State* pState)
 {
-	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_Scene::Def));
-	SDE_Scene::Def* pDefScene = new (pLuaMem) SDE_Scene::Def();
-	luaL_setmetatable(pState, SDE_SCENEDEF_NAME);
+	std::string strType = luaL_checkstring(pState, 1);
+
+	// 在 SDE_Registry System 中删除该表
+	SDE_VirtualMachine::Instance().GetGlobal(pState);
+	lua_getfield(pState, -1, "Registry");
+	lua_getfield(pState, -1, "System");
+	lua_pushnil(pState);
+	lua_setfield(pState, -2, strType.c_str());
+
+	lua_pushboolean(pState, g_director.DestroySystemDef(strType));
+
 	return 1;
 }
 
 SDE_API SDE_Director_GetSceneDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushlightuserdata(pState, g_director.GetSceneDef(strName));
-	luaL_setmetatable(pState, SDE_SCENEDEF_NAME);
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushlightuserdata(pState, g_director.GetSceneDef(strType));
 	return 1;
 }
 
-SDE_API SDE_Director_RegisterSceneDef(lua_State* pState)
+SDE_API SDE_Director_CreateSceneDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	SDE_Scene::Def* pDefScene = (SDE_Scene::Def*)luaL_checkudata(pState, 2, SDE_SCENEDEF_NAME);
-	g_director.RegisterSceneDef(strName, pDefScene);
-	return 0;
+	std::string strType = luaL_checkstring(pState, 1);
+
+	SDE_Scene::Def* pDefScene = g_director.CreateSceneDef(strType);
+	if (pDefScene)
+	{
+		lua_pushlightuserdata(pState, pDefScene);
+		luaL_setmetatable(pState, SDE_SCENEDEF_NAME);
+	}
+	else lua_pushnil(pState);
+
+	return 1;
 }
 
-SDE_API SDE_Director_UnregisterSceneDef(lua_State* pState)
+SDE_API SDE_Director_DestroySceneDef(lua_State* pState)
 {
-	std::string strName = luaL_checkstring(pState, 1);
-	lua_pushboolean(pState, g_director.UnregisterSceneDef(strName));
+	std::string strType = luaL_checkstring(pState, 1);
+	lua_pushboolean(pState, g_director.DestroySceneDef(strType));
 	return 1;
 }
 
 SDE_API SDE_Director_GetScene(lua_State* pState)
 {
-	lua_pushlightuserdata(pState, g_director.GetScene());
-	luaL_setmetatable(pState, SDE_SCENE_NAME);
+	SDE_Scene* pScene = g_director.GetScene();
+
+	if (pScene)
+	{
+		lua_pushlightuserdata(pState, g_director.GetScene());
+		luaL_setmetatable(pState, SDE_SCENE_NAME);
+	}
+	else lua_pushnil(pState);
+
 	return 1;
 }
 
 SDE_API SDE_Director_SwitchScene(lua_State* pState)
 {
 	SDE_Scene::Def* pDefScene = (SDE_Scene::Def*)luaL_checkudata(pState, 1, SDE_SCENEDEF_NAME);
-	lua_pushlightuserdata(pState, g_director.SwitchScene(*pDefScene));
+	lua_pushlightuserdata(pState, g_director.SwitchScene(pDefScene));
 	luaL_setmetatable(pState, SDE_SCENE_NAME);
 	return 1;
 }
 
 luaL_Reg g_funcDirectorMember[] =
 {
-	{ "GetEntityDef",			SDE_Director_GetEntityDef },
-	{ "RegisterEntityDef",		SDE_Director_RegisterEntityDef },
-	{ "UnregisterEntityDef",	SDE_Director_UnregisterEntityDef },
-
-	{ "GetComponentDef",		SDE_Director_GetComponentDef },
-	{ "RegisterComponentDef",	SDE_Director_RegisterComponentDef },
-	{ "UnregisterComponentDef", SDE_Director_UnregisterComponentDef },
-
-	{ "GetSystemDef",			SDE_Director_GetSystemDef },
-	{ "RegisterSystemDef",		SDE_Director_RegisterSystemDef },
-	{ "UnregisterSystemDef",	SDE_Director_UnregisterSystemDef },
-
-	{ "CreateSceneDef",			SDE_Director_CreateSceneDef	},
-	{ "GetSceneDef",			SDE_Director_GetSceneDef },
-	{ "RegisterSceneDef",		SDE_Director_RegisterSceneDef },
-	{ "UnregisterSceneDef",		SDE_Director_UnregisterSceneDef },
-
 	{ "GetScene",				SDE_Director_GetScene },
 	{ "SwitchScene",			SDE_Director_SwitchScene },
+
+	{ "GetEntityDef",			SDE_Director_GetEntityDef },
+	{ "CreateEntityDef",		SDE_Director_CreateEntityDef },
+	{ "DestroyEntityDef",		SDE_Director_DestroyEntityDef },
+
+	{ "GetComponentDef",		SDE_Director_GetComponentDef },
+	{ "CreateComponentDef",		SDE_Director_CreateComponentDef },
+	{ "DestroyComponentDef",	SDE_Director_DestroyComponentDef },
+
+	{ "GetSystemDef",			SDE_Director_GetSystemDef },
+	{ "CreateSystemDef",		SDE_Director_CreateSystemDef },
+	{ "DestroySystemDef",		SDE_Director_DestroySystemDef },
+
+	{ "GetSceneDef",			SDE_Director_GetSceneDef },
+	{ "CreateSceneDef",			SDE_Director_CreateSceneDef },
+	{ "DestroySceneDef",		SDE_Director_DestroySceneDef },
 
 	{ nullptr,					nullptr }
 };
