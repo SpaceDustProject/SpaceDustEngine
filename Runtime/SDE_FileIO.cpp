@@ -1,7 +1,10 @@
 #include "SDE_FileIO.h"
 #include "SDE_Debug.h"
 
+#include "SDE_Data.h"
+
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 
 class SDE_FileIO::Impl
@@ -19,57 +22,67 @@ public:
 
 SDE_Data SDE_FileIO::Input(const std::string& strFileName, bool isBinary)
 {
-	if (!isBinary) m_pImpl->m_finStream.open(strFileName, std::ios_base::in);
-	else m_pImpl->m_finStream.open(strFileName, std::ios_base::in, std::ios_base::binary);
+	if (!isBinary) {
+		m_pImpl->m_finStream.open(strFileName, std::ios_base::in);
+	}
+	else {
+		m_pImpl->m_finStream.open(strFileName, std::ios_base::in | std::ios_base::binary);
+	}
 
-	if (!m_pImpl->m_finStream.is_open())
+	if (!m_pImpl->m_finStream.good())
 	{
-		SDE_Debug::Instance().OutputLog(
-			"Error Input: "
-			"Failed to open %s.\n",
+		SDE_Debug::Instance().OutputInfo(
+			"Failed to open %s when try to read.\n",
 			strFileName
 		);
 		m_pImpl->m_finStream.clear();
-
 		return { nullptr, 0 };
 	}
 
-	m_pImpl->m_finStream.seekg(0, std::ios::end);
-	int nSize = m_pImpl->m_finStream.tellg();
-	char* pData = new char[nSize];
-
-	m_pImpl->m_finStream.seekg(0, std::ios::beg);
-	m_pImpl->m_finStream.read(pData, nSize);
-
-	m_pImpl->m_finStream.clear();
+	std::stringstream ssScriptContent;
+	ssScriptContent << m_pImpl->m_finStream.rdbuf();
 	m_pImpl->m_finStream.close();
+	m_pImpl->m_finStream.clear();
+
+	size_t nSize = ssScriptContent.str().size() + 1;
+	char* pData = new char[nSize];
+	strcpy_s(pData, nSize, ssScriptContent.str().c_str());
 
 	return { pData, nSize };
 }
 
 void SDE_FileIO::Output(const std::string& strFileName, const SDE_Data& dataWritten, bool isBinary)
 {
-	if (!isBinary) m_pImpl->m_finStream.open(strFileName, std::ios_base::out);
-	else m_pImpl->m_finStream.open(strFileName, std::ios_base::out, std::ios_base::binary);
+	if (!isBinary) {
+		m_pImpl->m_foutStream.open(strFileName, std::ios_base::out);
+	}
+	else {
+		m_pImpl->m_foutStream.open(strFileName, std::ios_base::out | std::ios_base::binary);
+	}
 
-	if (!m_pImpl->m_foutStream.is_open())
+	if (!m_pImpl->m_foutStream.good())
 	{
-		SDE_Debug::Instance().OutputLog(
-			"Error Output: "
-			"Failed to open %s.\n",
+		SDE_Debug::Instance().OutputInfo(
+			"Failed to open %s when try to write.\n",
 			strFileName
 		);
 		m_pImpl->m_foutStream.clear();
-
 		return;
 	}
 
-	m_pImpl->m_foutStream.write(dataWritten.GetData(), dataWritten.GetSize());
+	if (!isBinary)
+	{
+		m_pImpl->m_foutStream << dataWritten.GetData();
+	}
+	else
+	{
+		m_pImpl->m_foutStream.write(dataWritten.GetData(), dataWritten.GetSize());
+	}
+
 	m_pImpl->m_foutStream.flush();
-
-	m_pImpl->m_foutStream.clear();
 	m_pImpl->m_foutStream.close();
-
+	m_pImpl->m_foutStream.clear();
+	
 	return;
 }
 

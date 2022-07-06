@@ -1,12 +1,5 @@
-print("Here is test.lua")
-
-SDE_Director.CreateSceneDef("testScene")
-SDE_Director.CreateSystemDef("testSystem")
-
-local sceneDef = SDE_Director.GetSceneDef("testScene")
-local systemDef = SDE_Director.GetSystemDef("testSystem")
-
---sceneDef:AddSystemDef(systemDef)
-
-aMeta = getmetatable(sceneDef)
-print(aMeta.__name)
+print("Here is test1.lua")
+print("Here is test2.lua")
+print("Here is test3.lua")
+print("Here is test4.lua")
+print("Here is test5.lua")

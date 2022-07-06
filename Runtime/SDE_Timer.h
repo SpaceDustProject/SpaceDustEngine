@@ -6,16 +6,12 @@
 class SDE_Timer
 {
 public:
-	struct Def
-	{
-
-	};
 
 private:
 
 
 private:
-	SDE_Timer(const Def& defTimer);
+	SDE_Timer();
 	~SDE_Timer();
 };
 

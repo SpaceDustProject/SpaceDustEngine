@@ -5,14 +5,14 @@ class SDE_Data
 {
 public:
 	const char* GetData() const;	// 获取数据
-	int			GetSize() const;	// 获取数据长度
+	size_t		GetSize() const;	// 获取数据长度
 
 private:
 	class Impl;
 	Impl* m_pImpl;
 
 public:
-	SDE_Data(char* pData, int nSize);
+	SDE_Data(char* pData, size_t nSize);
 	SDE_Data(const SDE_Data& dataCopy);
 	SDE_Data& operator=(const SDE_Data& dataCopy);
 	~SDE_Data();

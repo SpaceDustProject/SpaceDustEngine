@@ -1,45 +1,34 @@
 #ifndef _SDE_SYSTEM_H_
 #define _SDE_SYSTEM_H_
 
-#define SDE_SYSTEM_NAME		"SDE_System"
-#define SDE_SYSTEMDEF_NAME	"SDE_System_Def"
+#define SDE_TYPE_SYSTEM		"SDE_System"
+#define SDE_TYPE_SYSTEMDEF	"SDE_SystemDef"
 
-#include <lua.hpp>
-#include <string>
+#include "SDE_LuaLightUserdata.h"
+
+class SDE_LuaMetatable;
 
 class SDE_Scene;
 
-class SDE_System
+struct SDE_SystemDef
 {
-public:
-	struct Def
-	{
-		std::string strType;
-	};
 
-	const std::string&	GetType();
-	SDE_Scene*			GetScene();
-
-	int					GetInitRef();
-	int					GetUpdateRef();
-	int					GetQuitRef();
-
-private:
-	std::string m_strType;		// System 的种类
-	SDE_Scene*	m_pScene;		// System 所属的场景
-
-	int			m_nRefInit;		// System 初始化函数索引
-	int			m_nRefUpdate;	// System 更新函数索引
-	int			m_nRefQuit;		// System 退出函数索引
-
-private:
-	SDE_System(SDE_Scene* pScene, Def* defSystem);
-	~SDE_System();
-
-	friend class SDE_Scene;
 };
 
-extern luaL_Reg g_funcSystemMember[];
-extern luaL_Reg g_funcSystemDefMember[];
+class SDE_System : public SDE_LuaLightUserdata
+{
+public:
+
+
+private:
+
+
+public:
+	SDE_System(SDE_Scene* pScene, const SDE_SystemDef& defSystem);
+	~SDE_System();
+};
+
+extern SDE_LuaMetatable g_metatableSystemDef;
+extern SDE_LuaLightMetatable g_metatableSystem;
 
 #endif // !_SDE_SYSTEM_H_

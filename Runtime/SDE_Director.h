@@ -1,47 +1,57 @@
 #ifndef _SDE_DIRECTOR_H_
 #define _SDE_DIRECTOR_H_
 
-#include "SDE_Scene.h"
+#define SDE_NAME_DIRECTOR "SDE_Director"
+
+#include <string>
+
+class SDE_Data;
+
+struct SDE_LuaReg;
+class SDE_LuaPackage;
+class SDE_LuaLightMetatable;
+
+class SDE_Scene;
+struct SDE_SceneDef;
 
 class SDE_MemoryPool;
+class SDE_Blackboard;
 
 class SDE_Director
 {
 public:
-	bool				Run();											// 运行
+	bool				Run();										// 运行
+	void				Pause();									// 停止
 
-	lua_State*			GetLuaVM();										// 获取内部虚拟机
-	SDE_MemoryPool*		GetMemoryPool();								// 获取内部内存池
+	bool				RunScript(const SDE_Data& dataScript);		// 运行脚本
 
-	SDE_Scene*			GetScene();										// 获取当前运行场景
-	SDE_Scene*			SwitchScene(SDE_Scene::Def* pDefScene);			// 切换当前场景
+	void				RunScene(const std::string& strName);		// 运行场景
+	void				RunScene(const SDE_SceneDef& defScene);		// 创建并运行场景
 
-	SDE_Entity::Def*	GetEntityDef(const std::string& strType);
-	SDE_Entity::Def*	CreateEntityDef(const std::string& strType);
-	bool				DestroyEntityDef(const std::string& strType);
+	SDE_Scene*			GetScene();									// 获取当前正在运行的场景
+	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 创建场景
 
-	SDE_Component::Def*	GetComponentDef(const std::string& strType);
-	SDE_Component::Def*	CreateComponentDef(const std::string& strType);
-	bool				DestroyComponentDef(const std::string& strType);
-
-	SDE_System::Def*	GetSystemDef(const std::string& strType);
-	SDE_System::Def*	CreateSystemDef(const std::string& strType);
-	bool				DestroySystemDef(const std::string& strType);
-
-	SDE_Scene::Def*		GetSceneDef(const std::string& strType);
-	SDE_Scene::Def*		CreateSceneDef(const std::string& strType);
-	bool				DestroySceneDef(const std::string& strType);
+	SDE_MemoryPool*		GetMemoryPool();
+	SDE_Blackboard*		GetBlackboard();
 
 private:
 	class Impl;
 	Impl* m_pImpl;
 
 public:
-	SDE_Director();
 	~SDE_Director();
+	SDE_Director(const SDE_Director&) = delete;
+	SDE_Director& operator=(const SDE_Director&) = delete;
+	static SDE_Director& Instance()
+	{
+		static SDE_Director instance;
+		return instance;
+	}
+
+private:
+	SDE_Director();
 };
 
-extern luaL_Reg g_funcDirectorMember[];
-extern SDE_Director g_director;
+extern SDE_LuaPackage g_directorPackage;
 
 #endif // !_SDE_DIRECTOR_H_

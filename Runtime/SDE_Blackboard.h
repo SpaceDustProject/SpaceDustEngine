@@ -31,16 +31,8 @@ private:
 	Impl* m_pImpl;
 
 public:
-	~SDE_Blackboard();
-	SDE_Blackboard(const SDE_Blackboard&) = delete;
-	SDE_Blackboard& operator=(const SDE_Blackboard&) = delete;
-	static SDE_Blackboard& Instance()
-	{
-		static SDE_Blackboard instance;
-		return instance;
-	}
-private:
 	SDE_Blackboard();
+	~SDE_Blackboard();
 };
 
 #endif // !_SDE_BLACKBOARD_H_

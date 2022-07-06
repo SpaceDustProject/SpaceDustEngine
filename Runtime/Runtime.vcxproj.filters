@@ -2,13 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="SDE_Main.cpp" />
-    <ClCompile Include="SDE_Settings.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="SDE_Debug.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="SDE_VirtualMachine.cpp">
+    <ClCompile Include="SDE_LuaUtility.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="SDE_FileIO.cpp">
@@ -29,16 +26,10 @@
     <ClCompile Include="SDE_ThreadPool.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="SDE_Entity.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="SDE_Scene.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="SDE_System.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="SDE_Component.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,6 +48,9 @@
     </Filter>
     <Filter Include="Header\SDE_Object">
       <UniqueIdentifier>{55d9857a-a765-4c5f-bf98-8f7e071894aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\SDE_Lua">
+      <UniqueIdentifier>{d8788ab2-1aaa-4461-840b-8bedfa6645b5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -78,34 +72,28 @@
     <ClInclude Include="SDE_MemoryPool.h">
       <Filter>Header\SDE_Module</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_VirtualMachine.h">
-      <Filter>Header\SDE_Module</Filter>
-    </ClInclude>
-    <ClInclude Include="SDE_Settings.h">
-      <Filter>Header\SDE_Module</Filter>
-    </ClInclude>
     <ClInclude Include="SDE_Data.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
     <ClInclude Include="SDE_Timer.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_Entity.h">
-      <Filter>Header\SDE_Object</Filter>
-    </ClInclude>
-    <ClInclude Include="SDE_System.h">
-      <Filter>Header\SDE_Object</Filter>
-    </ClInclude>
     <ClInclude Include="SDE_ThreadPool.h">
+      <Filter>Header\SDE_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Director.h">
       <Filter>Header\SDE_Module</Filter>
     </ClInclude>
     <ClInclude Include="SDE_Scene.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_Director.h">
-      <Filter>Header\SDE_Module</Filter>
+    <ClInclude Include="SDE_LuaUtility.h">
+      <Filter>Header\SDE_Lua</Filter>
     </ClInclude>
-    <ClInclude Include="SDE_Component.h">
+    <ClInclude Include="SDE_LuaLightUserdata.h">
+      <Filter>Header\SDE_Lua</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_System.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,9 +1,9 @@
 #ifndef _SDE_FILE_IO_H_
 #define _SDE_FILE_IO_H_
 
-#include "SDE_Data.h"
-
 #include <string>
+
+class SDE_Data;
 
 class SDE_FileIO
 {

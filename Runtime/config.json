@@ -1,8 +1,0 @@
-{
-    "entry": "test",
-    "path": [
-        "modules/?.dll"
-    ],
-    "cpath": [],
-    "scriptPath": []
-}

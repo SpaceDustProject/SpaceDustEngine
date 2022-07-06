@@ -5,11 +5,11 @@ class SDE_Data::Impl
 {
 public:
 	char*	pData;
-	int		nSize;
+	size_t	nSize;
 	int		nRefCount;
 
 public:
-	Impl(char* pDataIn, int nSizeIn) :
+	Impl(char* pDataIn, size_t nSizeIn) :
 		pData(pDataIn), nSize(nSizeIn), nRefCount(1) {}
 
 	~Impl() { if (pData) delete[] pData; }
@@ -20,12 +20,12 @@ const char* SDE_Data::GetData() const
 	return m_pImpl->pData;
 }
 
-int SDE_Data::GetSize() const
+size_t SDE_Data::GetSize() const
 {
 	return m_pImpl->nSize;
 }
 
-SDE_Data::SDE_Data(char* pData, int nSize)
+SDE_Data::SDE_Data(char* pData, size_t nSize)
 {
 	void* pMem = g_memoryPool.Allocate(sizeof(Impl));
 	m_pImpl = new (pMem) Impl(pData, nSize);
