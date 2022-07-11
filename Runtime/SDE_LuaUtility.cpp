@@ -19,6 +19,7 @@ void SDE_LuaUtility::GetRegistry(lua_State* pState)
 
 	lua_pushstring(pState, SDE_NAME_REGISTRY);
 	lua_rawget(pState, -2);
+	lua_remove(pState, -2);
 }
 
 void SDE_LuaUtility::GetRuntime(lua_State* pState)
@@ -27,6 +28,20 @@ void SDE_LuaUtility::GetRuntime(lua_State* pState)
 
 	lua_pushstring(pState, SDE_NAME_RUNTIME);
 	lua_rawget(pState, -2);
+	lua_remove(pState, -2);
+}
+
+void SDE_LuaUtility::GetRuntime(lua_State* pState, const std::string& strName)
+{
+	GetGlobal(pState);
+
+	lua_pushstring(pState, SDE_NAME_RUNTIME);
+	lua_rawget(pState, -2);
+	lua_remove(pState, -2);
+
+	lua_pushstring(pState, strName.c_str());
+	lua_rawget(pState, -2);
+	lua_remove(pState, -2);
 }
 
 void SDE_LuaUtility::GetTemporary(lua_State* pState)
@@ -35,6 +50,7 @@ void SDE_LuaUtility::GetTemporary(lua_State* pState)
 
 	lua_pushstring(pState, SDE_NAME_TEMPORARY);
 	lua_rawget(pState, -2);
+	lua_remove(pState, -2);
 }
 
 bool SDE_LuaUtility::RunScript(lua_State* pState, const SDE_Data& dataScript)
@@ -105,39 +121,39 @@ void SDE_LuaUtility::SetPackage(lua_State* pState, const SDE_LuaPackage& package
 void SDE_LuaUtility::RegisterMetatable(lua_State* pState, const SDE_LuaMetatable& metatable)
 {
 	luaL_newmetatable(pState, metatable.GetType().c_str());
-
-	lua_pushstring(pState, "__index");
-	lua_createtable(pState, 0, metatable.GetPackage().GetFuncList().size());
-
-	for (const SDE_LuaReg& funcReg : metatable.GetPackage().GetFuncList())
 	{
-		lua_pushstring(pState, funcReg.name);
-		lua_pushcfunction(pState, funcReg.func);
-		lua_rawset(pState, -3);
-	}
-	lua_rawset(pState, -3);
+		lua_pushstring(pState, "__index");
+		lua_createtable(pState, 0, metatable.GetPackage().GetFuncList().size());
 
-	if (!metatable.GetGCFunc())
-	{
-		lua_pushstring(pState, "__gc");
-		lua_pushcfunction(pState, metatable.GetGCFunc());
+		for (const SDE_LuaReg& funcReg : metatable.GetPackage().GetFuncList())
+		{
+			lua_pushstring(pState, funcReg.name);
+			lua_pushcfunction(pState, funcReg.func);
+			lua_rawset(pState, -3);
+		}
 		lua_rawset(pState, -3);
-	}
 
+		if (metatable.GetGCFunc())
+		{
+			lua_pushstring(pState, "__gc");
+			lua_pushcfunction(pState, metatable.GetGCFunc());
+			lua_rawset(pState, -3);
+		}
+	}
 	lua_pop(pState, 1);
 }
 
-void* SDE_LuaUtility::GetLightUserdata(lua_State* pState, int nIndex, const std::string& strType)
+void* SDE_LuaUtility::GetLightUserdata(lua_State* pState, int nIndex, const std::string& strName)
 {
 	SDE_LuaLightUserdata* pLightUserdata = (SDE_LuaLightUserdata*)luaL_checkudata(pState, nIndex, SDE_TYPE_LIGHTUSERDATA);
 
-	if (pLightUserdata->GetTypeLU() != strType)
+	if (pLightUserdata->GetTypeLU() != strName)
 	{
 		SDE_Debug::Instance().OutputError(
 			"Failed to precompile script. "
 			"%s can't call functions of type %s.\n",
 			pLightUserdata->GetTypeLU().c_str(),
-			strType.c_str()
+			strName.c_str()
 		);
 	}
 	return pLightUserdata;
@@ -148,7 +164,7 @@ void SDE_LuaUtility::CheckStack(lua_State* pState)
 	for (int i = 1; i <= lua_gettop(pState); i++)
 	{
 		SDE_Debug::Instance().OutputInfo(
-			"µÚ %d Î»: %s\n",
+			"Value at index %d: %s\n",
 			i, luaL_typename(pState, i)
 		);
 	}

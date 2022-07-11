@@ -7,6 +7,12 @@
 
 class SDE_LuaLightMetatable;
 
+struct SDE_LuaLightUserdataDef
+{
+	std::string strName;
+	bool		bIsRegistered = false;
+};
+
 class SDE_LuaLightUserdata
 {
 public:

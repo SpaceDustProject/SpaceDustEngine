@@ -25,7 +25,7 @@ public:
 	SDE_MemoryPool	m_memoryPool;
 	SDE_Blackboard	m_blackboard;
 
-	std::unordered_map<std::string, SDE_Scene*> m_mapScenePreloaded;
+	std::unordered_map<std::string, SDE_Scene*>		m_mapScenePreloaded;
 
 public:
 	Impl()
@@ -44,12 +44,23 @@ public:
 		// 注册 SceneDef 元表
 		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableSceneDef);
 
+		// 注册 SystemDef 元表
+		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableSystemDef);
+
 		// 注册并设置 LightUserdata 共用元表
 		lua_pushlightuserdata(m_pState, nullptr);
 		luaL_newmetatable(m_pState, SDE_TYPE_LIGHTUSERDATA);
 		{
-			// 注册 Scene 函数
-			SDE_LuaUtility::SetPackage(m_pState, g_metatableScene.GetPackage());
+			lua_pushstring(m_pState, "__index");
+			lua_newtable(m_pState);
+			{
+				// 注册 Scene 函数
+				SDE_LuaUtility::SetPackage(m_pState, g_packageScene);
+
+				// 注册 System 函数
+				SDE_LuaUtility::SetPackage(m_pState, g_packageSystem);
+			}
+			lua_rawset(m_pState, -3);
 		}
 		lua_setmetatable(m_pState, -2);
 		lua_pop(m_pState, 1);
@@ -63,8 +74,12 @@ public:
 			lua_rawset(m_pState, -3);
 
 			lua_pushstring(m_pState, SDE_NAME_REGISTRY);
-			lua_createtable(m_pState, 0, 2);
+			lua_createtable(m_pState, 0, 4);
 			{
+				lua_pushstring(m_pState, SDE_TYPE_SCENEDEF);
+				lua_newtable(m_pState);
+				lua_rawset(m_pState, -3);
+
 				lua_pushstring(m_pState, SDE_TYPE_SYSTEMDEF);
 				lua_newtable(m_pState);
 				lua_rawset(m_pState, -3);
@@ -72,10 +87,34 @@ public:
 			lua_rawset(m_pState, -3);
 
 			lua_pushstring(m_pState, SDE_NAME_TEMPORARY);
-			lua_createtable(m_pState, 0, 2);
+			lua_createtable(m_pState, 0, 4);
 			{
+				lua_pushstring(m_pState, SDE_TYPE_SCENEDEF);
+				lua_newtable(m_pState);
+				{
+					// 使该表具有弱值
+					lua_newtable(m_pState);
+					{
+						lua_pushstring(m_pState, "__mode");
+						lua_pushstring(m_pState, "v");
+						lua_rawset(m_pState, -3);
+					}
+					lua_setmetatable(m_pState, -2);
+				}
+				lua_rawset(m_pState, -3);
+
 				lua_pushstring(m_pState, SDE_TYPE_SYSTEMDEF);
 				lua_newtable(m_pState);
+				{
+					// 使该表具有弱值
+					lua_newtable(m_pState);
+					{
+						lua_pushstring(m_pState, "__mode");
+						lua_pushstring(m_pState, "v");
+						lua_rawset(m_pState, -3);
+					}
+					lua_setmetatable(m_pState, -2);
+				}
 				lua_rawset(m_pState, -3);
 			}
 			lua_rawset(m_pState, -3);
@@ -101,7 +140,18 @@ bool SDE_Director::Run()
 		fFrameRate <= 0.0f)
 	{
 		SDE_Debug::Instance().OutputInfo(
-			"Failed to run director: Invalid frame rate value.\n"
+			"Failed to run director: "
+			"Invalid frame rate value.\n"
+		);
+		m_pImpl->m_bIsRunning = false;
+		return false;
+	}
+
+	if (!m_pImpl->m_pSceneRunning)
+	{
+		SDE_Debug::Instance().OutputInfo(
+			"Failed to run director: "
+			"No running scene specified.\n"
 		);
 		m_pImpl->m_bIsRunning = false;
 		return false;
@@ -119,11 +169,25 @@ bool SDE_Director::Run()
 	std::chrono::duration<double> dAdjustTime(0.0);	// 单帧睡眠调整用时
 	std::chrono::duration<double> dSleepTime(0.0);	// 单帧睡眠预期用时
 
+	SDE_LuaUtility::GetRuntime(m_pImpl->m_pState, m_pImpl->m_pSceneRunning->GetName());
+
+	lua_pushstring(m_pImpl->m_pState, SDE_TYPE_SYSTEM);
+	lua_rawget(m_pImpl->m_pState, -2);
+	lua_remove(m_pImpl->m_pState, -2);
+
+	lua_pushstring(m_pImpl->m_pState, SDE_NAME_SYSTEM_ONUPDATE);
+	lua_rawget(m_pImpl->m_pState, -2);
+	lua_remove(m_pImpl->m_pState, -2);
+
 	while (m_pImpl->m_bIsRunning)
 	{
 		t1 = std::chrono::steady_clock::now();
 
-
+		lua_pushnil(m_pImpl->m_pState);
+		while (lua_next(m_pImpl->m_pState, -2))
+		{
+			lua_pcall(m_pImpl->m_pState, 0, 0, 0);
+		}
 
 		t2 = std::chrono::steady_clock::now();
 
@@ -180,15 +244,19 @@ SDE_Scene* SDE_Director::CreateScene(const SDE_SceneDef& defScene)
 {
 	void* pMem = m_pImpl->m_memoryPool.Allocate(sizeof(SDE_SceneDef));
 	SDE_Scene* pScene = new (pMem) SDE_Scene(defScene);
-
-	// 在 Lua 中为该场景创建环境(主要储存连续的 Component)
-	SDE_LuaUtility::GetRuntime(m_pImpl->m_pState);
-	lua_pushstring(m_pImpl->m_pState, defScene.strName.c_str());
-	lua_newtable(m_pImpl->m_pState);
-	lua_rawset(m_pImpl->m_pState, -3);
-
 	m_pImpl->m_mapScenePreloaded[defScene.strName] = pScene;
 	return pScene;
+}
+
+void SDE_Director::SwitchScene(SDE_Scene* pScene)
+{
+	if (m_pImpl->m_pSceneRunning)
+	{
+		m_pImpl->m_pSceneRunning->~SDE_Scene();
+		m_pImpl->m_memoryPool.Free(m_pImpl->m_pSceneRunning, sizeof(SDE_Scene));
+	}
+
+	m_pImpl->m_pSceneRunning = pScene;
 }
 
 SDE_MemoryPool* SDE_Director::GetMemoryPool()
@@ -211,48 +279,6 @@ SDE_Director::~SDE_Director()
 	delete m_pImpl;
 }
 
-SDE_LUA_FUNC(SDE_Director_CreateSceneDef)
-{
-	std::string strName = luaL_checkstring(pState, 1);
-
-	switch (lua_gettop(pState))
-	{
-	case 3:
-		if (!lua_istable(pState, 3))
-		{
-			SDE_Debug::Instance().OutputError(
-				"The parameter on index 3 of this function should be a table.\n"
-			);
-		}
-
-		lua_pushnil(pState);
-		while (lua_next(pState, 3))
-		{
-			
-		}
-
-	case 2:
-		if (!lua_istable(pState, 2))
-		{
-			SDE_Debug::Instance().OutputError(
-				"The parameter on index 2 of this function should be a table.\n"
-			);
-
-			lua_pushnil(pState);
-			while (lua_next(pState, 2))
-			{
-
-			}
-		}
-
-	}
-
-	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_SceneDef));
-	SDE_SceneDef* pDefScene = new (pLuaMem) SDE_SceneDef();
-
-	return 1;
-}
-
 SDE_LUA_FUNC(SDE_Director_GetScene)
 {
 	lua_pushlightuserdata(pState, SDE_Director::Instance().GetScene());
@@ -261,14 +287,239 @@ SDE_LUA_FUNC(SDE_Director_GetScene)
 
 SDE_LUA_FUNC(SDE_Director_CreateScene)
 {
+	SDE_SceneDef* pDefScene = nullptr;
+
+	// 获取场景定义对象，并将构造函数留在栈顶
+	if (lua_type(pState, 1) == LUA_TSTRING)
+	{
+		std::string strName = lua_tostring(pState, 1);
+
+		SDE_LuaUtility::GetRegistry(pState);
+
+		lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		lua_pushstring(pState, strName.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		// 如果注册表内不存在该定义
+		if (lua_type(pState, -1) == LUA_TNIL)
+			return 1;
+
+		lua_pushstring(pState, "userdata");
+		lua_rawget(pState, -2);
+		pDefScene = (SDE_SceneDef*)lua_touserdata(pState, -1);
+		lua_pop(pState, 1);
+
+		lua_pushstring(pState, "constructor");
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+	}
+	else
+	{
+		pDefScene = (SDE_SceneDef*)luaL_checkudata(pState, 1, SDE_TYPE_SCENEDEF);
+
+		SDE_LuaUtility::GetTemporary(pState);
+
+		lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		lua_pushstring(pState, pDefScene->strName.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+	}
+
+	SDE_Scene* pScene = SDE_Director::Instance().CreateScene(*pDefScene);
+
+	// 在 Lua 中为该场景创建环境
+	SDE_LuaUtility::GetRuntime(pState);
+	lua_pushstring(pState, pDefScene->strName.c_str());
+	lua_newtable(pState);
+	{
+		lua_pushstring(pState, SDE_TYPE_SYSTEM);
+		lua_createtable(pState, 0, 3);
+		{
+			lua_pushstring(pState, SDE_NAME_SYSTEM_ONINIT);
+			lua_newtable(pState);
+			lua_rawset(pState, -3);
+
+			lua_pushstring(pState, SDE_NAME_SYSTEM_ONUPDATE);
+			lua_newtable(pState);
+			lua_rawset(pState, -3);
+
+			lua_pushstring(pState, SDE_NAME_SYSTEM_ONQUIT);
+			lua_newtable(pState);
+			lua_rawset(pState, -3);
+		}
+		lua_rawset(pState, -3);
+	}
+	lua_rawset(pState, -3);
+	lua_pop(pState, 1);
+
+	// 根据堆栈对象决定构造函数参数个数
+	lua_pushlightuserdata(pState, pScene);
+	
+	if (lua_gettop(pState) >= 4)
+	{
+		lua_pushvalue(pState, 2);
+		lua_pcall(pState, 2, 0, 0);
+	}
+	else lua_pcall(pState, 1, 0, 0);
+
+	lua_pushlightuserdata(pState, pScene);
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_SwitchScene)
+{
+	SDE_Scene* pScene = (SDE_Scene*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SCENE);
+	SDE_Director::Instance().SwitchScene(pScene);
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_Director_CreateSceneDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_pushvalue(pState, 2);
+	lua_rawset(pState, -3);
+
+	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_SceneDef));
+	SDE_SceneDef* pDefScene = new (pLuaMem) SDE_SceneDef{ strName };
+	luaL_setmetatable(pState, SDE_TYPE_SCENEDEF);
+
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_RegisterSceneDef)
+{
 	SDE_SceneDef* pDefScene = (SDE_SceneDef*)luaL_checkudata(pState, 1, SDE_TYPE_SCENEDEF);
-	lua_pushlightuserdata(pState, SDE_Director::Instance().CreateScene(*pDefScene));
+
+	if (pDefScene->bIsRegistered)
+		return 0;
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+	lua_rawget(pState, -2);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+	lua_rawget(pState, -2);
+
+	lua_pushstring(pState, pDefScene->strName.c_str());
+	lua_createtable(pState, 0, 2);
+	{
+		lua_pushstring(pState, "userdata");
+		lua_pushvalue(pState, 1);
+		lua_rawset(pState, -3);
+
+		lua_pushstring(pState, "constructor");
+		lua_pushstring(pState, pDefScene->strName.c_str());
+		lua_rawget(pState, -7);
+		lua_rawset(pState, -3);
+
+		// 清除 Temporary 中的 constructor
+		lua_pushstring(pState, pDefScene->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -7);
+	}
+	lua_rawset(pState, -3);
+
+	pDefScene->bIsRegistered = true;
+
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_Director_GetSceneDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, "userdata");
+	lua_rawget(pState, -2);
+
 	return 1;
 }
 
 SDE_LUA_FUNC(SDE_Director_CreateSystemDef)
 {
+	std::string strName = luaL_checkstring(pState, 1);
 
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_SYSTEMDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_pushvalue(pState, 2);
+	lua_rawset(pState, -3);
+
+	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_SystemDef));
+	SDE_SystemDef* pSystemDef = new (pLuaMem) SDE_SystemDef{ strName };
+	luaL_setmetatable(pState, SDE_TYPE_SYSTEMDEF);
+
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_RegisterSystemDef)
+{
+	SDE_SystemDef* pDefSystem = (SDE_SystemDef*)luaL_checkudata(pState, 1, SDE_TYPE_SYSTEMDEF);
+
+	if (pDefSystem->bIsRegistered)
+		return 0;
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_SYSTEMDEF);
+	lua_rawget(pState, -2);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_SYSTEMDEF);
+	lua_rawget(pState, -2);
+
+	lua_pushstring(pState, pDefSystem->strName.c_str());
+	lua_createtable(pState, 0, 2);
+	{
+		lua_pushstring(pState, "userdata");
+		lua_pushvalue(pState, 1);
+		lua_rawset(pState, -3);
+
+		lua_pushstring(pState, "constructor");
+		lua_pushstring(pState, pDefSystem->strName.c_str());
+		lua_rawget(pState, -7);
+		lua_rawset(pState, -3);
+
+		// 清除 Temporary 中的 constructor
+		lua_pushstring(pState, pDefSystem->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -7);
+	}
+	lua_rawset(pState, -3);
+
+	pDefSystem->bIsRegistered = true;
+
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_Director_GetSystemDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_SYSTEMDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, "userdata");
+	lua_rawget(pState, -2);
 
 	return 1;
 }
@@ -277,5 +528,13 @@ SDE_LuaPackage g_directorPackage =
 {
 	{ "GetScene",			SDE_Director_GetScene },
 	{ "CreateScene",		SDE_Director_CreateScene },
-	{ "CreateSystemDef",	SDE_Director_CreateSystemDef }
+	{ "SwitchScene",		SDE_Director_SwitchScene },
+
+	{ "CreateSceneDef",		SDE_Director_CreateSceneDef },
+	{ "RegisterSceneDef",	SDE_Director_RegisterSceneDef },
+	{ "GetSceneDef",		SDE_Director_GetSceneDef },
+
+	{ "CreateSystemDef",	SDE_Director_CreateSystemDef },
+	{ "RegisterSystemDef",	SDE_Director_RegisterSystemDef },
+	{ "GetSystemDef",		SDE_Director_GetSystemDef }
 };

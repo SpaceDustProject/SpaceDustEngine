@@ -118,6 +118,9 @@ namespace SDE_LuaUtility
 	// 获得 SDE 全局表中的运行环境
 	void GetRuntime(lua_State* pState);
 
+	// 获得指定场景在全局表中的运行环境
+	void GetRuntime(lua_State* pState, const std::string& strName);
+
 	// 获得 SDE 全局表中的临时表
 	void GetTemporary(lua_State* pState);
 	
@@ -128,7 +131,7 @@ namespace SDE_LuaUtility
 	void RegisterMetatable(lua_State* pState, const SDE_LuaMetatable& metatable);
 
 	// 获取轻量用户数据并查看其类型
-	void* GetLightUserdata(lua_State* pState, int nIndex, const std::string& strType);
+	void* GetLightUserdata(lua_State* pState, int nIndex, const std::string& strName);
 
 	// 查看堆栈情况
 	void CheckStack(lua_State* pState);

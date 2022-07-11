@@ -9,7 +9,6 @@ class SDE_Data;
 
 struct SDE_LuaReg;
 class SDE_LuaPackage;
-class SDE_LuaLightMetatable;
 
 class SDE_Scene;
 struct SDE_SceneDef;
@@ -30,6 +29,7 @@ public:
 
 	SDE_Scene*			GetScene();									// 获取当前正在运行的场景
 	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 创建场景
+	void				SwitchScene(SDE_Scene* pScene);				// 切换当前场景
 
 	SDE_MemoryPool*		GetMemoryPool();
 	SDE_Blackboard*		GetBlackboard();
