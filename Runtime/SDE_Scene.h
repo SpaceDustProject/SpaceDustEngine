@@ -7,6 +7,7 @@
 #include "SDE_LuaLightUserdata.h"
 
 class SDE_MemoryPool;
+class SDE_Director;
 
 class SDE_Entity;
 struct SDE_EntityDef;
@@ -22,18 +23,17 @@ class SDE_LuaMetatable;
 
 struct SDE_SceneDef : SDE_LuaLightUserdataDef
 {
-
+	SDE_SceneDef(const std::string strNameIn)
+		: SDE_LuaLightUserdataDef(strNameIn) {}
 };
 
 class SDE_Scene : public SDE_LuaLightUserdata
 {
 public:
-	const std::string&	GetName();
+	SDE_Entity*			CreateEntity(const SDE_EntityDef& defEntity);
+	void				DestroyEntity(SDE_Entity* pEntity);
 
-	SDE_Entity*			CreateEntity(const SDE_EntityDef& pDefEntity);
-	bool				DestroyEntity(SDE_Entity* pEntity);
-
-	SDE_System*			CreateSystem(const SDE_SystemDef& pDefSystem);
+	SDE_System*			CreateSystem(const SDE_SystemDef& defSystem);
 	void				DestroySystem(SDE_System* pSystem);
 
 	SDE_MemoryPool*		GetMemoryPool();

@@ -149,9 +149,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SDE_Blackboard.cpp" />
+    <ClCompile Include="SDE_Component.cpp" />
     <ClCompile Include="SDE_Data.cpp" />
     <ClCompile Include="SDE_Debug.cpp" />
     <ClCompile Include="SDE_Director.cpp" />
+    <ClCompile Include="SDE_Entity.cpp" />
     <ClCompile Include="SDE_FileIO.cpp" />
     <ClCompile Include="SDE_Main.cpp" />
     <ClCompile Include="SDE_MemoryPool.cpp" />
@@ -162,8 +164,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SDE_Blackboard.h" />
+    <ClInclude Include="SDE_Component.h" />
     <ClInclude Include="SDE_Config.h" />
     <ClInclude Include="SDE_Director.h" />
+    <ClInclude Include="SDE_Entity.h" />
     <ClInclude Include="SDE_LuaLightUserdata.h" />
     <ClInclude Include="SDE_Scene.h" />
     <ClInclude Include="SDE_System.h" />

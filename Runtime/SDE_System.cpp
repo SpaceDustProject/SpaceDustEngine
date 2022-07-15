@@ -1,5 +1,6 @@
 #include "SDE_System.h"
 
+#include "SDE_Director.h"
 #include "SDE_LuaUtility.h"
 #include "SDE_Debug.h"
 
@@ -8,11 +9,6 @@
 SDE_Scene* SDE_System::GetScene()
 {
 	return m_pScene;
-}
-
-const std::string& SDE_System::GetName()
-{
-	return m_strType;
 }
 
 long long SDE_System::GetInitRef()
@@ -49,16 +45,30 @@ SDE_System::SDE_System(SDE_Scene* pScene, const SDE_SystemDef& defSystem)
 	: SDE_LuaLightUserdata(SDE_TYPE_SYSTEM)
 {
 	m_pScene = pScene;
-	m_strType = defSystem.strName;
 
 	m_nRefInit = LUA_NOREF;
 	m_nRefUpdate = LUA_NOREF;
 	m_nRefQuit = LUA_NOREF;
+
+	SetName(defSystem.strName);
 }
 
 SDE_System::~SDE_System()
 {
+	lua_State* pState = SDE_Director::Instance().GetLuaState();
 
+	SDE_LuaUtility::GetRuntime(pState, m_pScene->GetName());
+	lua_pushstring(pState, SDE_TYPE_SYSTEM);
+	lua_rawget(pState, -2);
+
+	if (m_nRefInit != LUA_NOREF)
+		luaL_unref(pState, -1, m_nRefInit);
+
+	if (m_nRefUpdate != LUA_NOREF)
+		luaL_unref(pState, -1, m_nRefUpdate);
+
+	if (m_nRefQuit != LUA_NOREF)
+		luaL_unref(pState, -1, m_nRefQuit);
 }
 
 SDE_LUA_FUNC(SDE_SystemDef_GetName)
@@ -111,13 +121,6 @@ SDE_LuaMetatable g_metatableSystemDef =
 	}
 };
 
-SDE_LUA_FUNC(SDE_System_GetName)
-{
-	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
-	lua_pushstring(pState, pSystem->GetName().c_str());
-	return 1;
-}
-
 SDE_LUA_FUNC(SDE_System_GetInitFunc)
 {
 	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
@@ -125,8 +128,6 @@ SDE_LUA_FUNC(SDE_System_GetInitFunc)
 
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
-	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONINIT);
 	lua_rawget(pState, -2);
 	lua_rawgeti(pState, -1, pSystem->GetInitRef());
 
@@ -141,8 +142,6 @@ SDE_LUA_FUNC(SDE_System_GetUpdateFunc)
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
 	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONUPDATE);
-	lua_rawget(pState, -2);
 	lua_rawgeti(pState, -1, pSystem->GetUpdateRef());
 
 	return 1;
@@ -154,8 +153,6 @@ SDE_LUA_FUNC(SDE_System_GetQuitFunc)
 
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
-	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONQUIT);
 	lua_rawget(pState, -2);
 	lua_rawgeti(pState, -1, pSystem->GetQuitRef());
 
@@ -169,11 +166,17 @@ SDE_LUA_FUNC(SDE_System_SetInitFunc)
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
 	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONINIT);
-	lua_rawget(pState, -2);
-	lua_pushvalue(pState, 2);
-	lua_rawseti(pState, -2, pSystem->GetInitRef());
 
+	if (pSystem->GetInitRef() != LUA_NOREF)
+	{
+		lua_pushvalue(pState, 2);
+		luaL_ref(pState, -2);
+	}
+	else
+	{
+		lua_pushvalue(pState, 2);
+		lua_rawseti(pState, -2, pSystem->GetInitRef());
+	}
 	return 0;
 }
 
@@ -184,11 +187,17 @@ SDE_LUA_FUNC(SDE_System_SetUpdateFunc)
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
 	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONUPDATE);
-	lua_rawget(pState, -2);
-	lua_pushvalue(pState, 2);
-	lua_rawseti(pState, -2, pSystem->GetUpdateRef());
 
+	if (pSystem->GetQuitRef() != LUA_NOREF)
+	{
+		lua_pushvalue(pState, 2);
+		luaL_ref(pState, -2);
+	}
+	else
+	{
+		lua_pushvalue(pState, 2);
+		lua_rawseti(pState, -2, pSystem->GetUpdateRef());
+	}
 	return 0;
 }
 
@@ -199,18 +208,22 @@ SDE_LUA_FUNC(SDE_System_SetQuitFunc)
 	SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
 	lua_pushstring(pState, SDE_TYPE_SYSTEM);
 	lua_rawget(pState, -2);
-	lua_pushstring(pState, SDE_NAME_SYSTEM_ONQUIT);
-	lua_rawget(pState, -2);
-	lua_pushvalue(pState, 2);
-	lua_rawseti(pState, -2, pSystem->GetQuitRef());
 
+	if (pSystem->GetQuitRef() != LUA_NOREF)
+	{
+		lua_pushvalue(pState, 2);
+		luaL_ref(pState, -2);
+	}
+	else
+	{
+		lua_pushvalue(pState, 2);
+		lua_rawseti(pState, -2, pSystem->GetQuitRef());
+	}
 	return 0;
 }
 
 SDE_LuaPackage g_packageSystem =
 {
-	{ "GetSystemName",	SDE_System_GetName },
-
 	{ "GetInitFunc",	SDE_System_GetInitFunc },
 	{ "GetUpdateFunc",	SDE_System_GetUpdateFunc },
 	{ "GetQuitFunc",	SDE_System_GetQuitFunc },

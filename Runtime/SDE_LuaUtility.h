@@ -21,7 +21,6 @@
 typedef int (*SDE_LuaFunc) (lua_State* L);
 
 class SDE_Data;
-class SDE_LuaLightMetatable;
 
 struct SDE_LuaReg
 {
@@ -44,32 +43,6 @@ public:
 		m_listFunc(listFunc) {}
 
 	~SDE_LuaPackage() = default;
-};
-
-// 为 light userdata 这类引擎层管理的对象提供元表
-class SDE_LuaLightMetatable
-{
-public:
-	const std::string& GetType() const {
-		return m_strType;
-	}
-
-	const SDE_LuaPackage& GetPackage() const {
-		return m_packageFunc;
-	}
-
-private:
-	std::string		m_strType;
-	SDE_LuaPackage	m_packageFunc;
-
-public:
-	SDE_LuaLightMetatable(
-		const std::string& strType,
-		const SDE_LuaPackage& packageFunc
-	) :
-		m_strType(strType), m_packageFunc(packageFunc) {}
-
-	~SDE_LuaLightMetatable() = default;
 };
 
 // 为 full userdata 和 table 这类 lua 管理的对象提供元表
@@ -132,6 +105,10 @@ namespace SDE_LuaUtility
 
 	// 获取轻量用户数据并查看其类型
 	void* GetLightUserdata(lua_State* pState, int nIndex, const std::string& strName);
+
+	// 获取堆栈指定索引上 LightUserdataDef 的构造函数置于栈顶，并返回该 LightUserdataDef
+	// 若失败则返回 nullptr，并将 nil 置于栈顶
+	void* GetLightUserdataDef(lua_State* pState, int nIndex, const std::string& strType);
 
 	// 查看堆栈情况
 	void CheckStack(lua_State* pState);

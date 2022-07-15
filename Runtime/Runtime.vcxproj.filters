@@ -32,6 +32,12 @@
     <ClCompile Include="SDE_System.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="SDE_Entity.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SDE_Component.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">
@@ -94,6 +100,12 @@
       <Filter>Header\SDE_Lua</Filter>
     </ClInclude>
     <ClInclude Include="SDE_System.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Entity.h">
+      <Filter>Header\SDE_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SDE_Component.h">
       <Filter>Header\SDE_Object</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@ print("Here is SDE_test.lua")
 local systemDef = SDE_Director.CreateSystemDef(
     "testSystem",
     function (system, args)
-        print(system:GetSystemName())
+        print(system:GetName())
 
         system:SetInitFunc(
             function ()
@@ -23,12 +23,10 @@ local systemDef = SDE_Director.CreateSystemDef(
     end
 )
 
-print(systemDef:GetName())
-
 local sceneDef = SDE_Director.CreateSceneDef(
     "testScene",
     function (scene, args)
-        print(scene:GetSceneName())
+        print(scene:GetName())
         scene:CreateSystem(systemDef)
     end
 )

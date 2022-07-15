@@ -8,6 +8,8 @@
 
 #include "SDE_Scene.h"
 #include "SDE_System.h"
+#include "SDE_Entity.h"
+#include "SDE_Component.h"
 
 #include <chrono>
 #include <thread>
@@ -38,29 +40,61 @@ public:
 		lua_gc(m_pState, LUA_GCINC, 100);
 
 		lua_newtable(m_pState);
-		SDE_LuaUtility::SetPackage(m_pState, g_directorPackage);
+		SDE_LuaUtility::SetPackage(m_pState, g_packageDirector);
 		lua_setglobal(m_pState, SDE_NAME_DIRECTOR);
 
 		// 注册 SceneDef 元表
 		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableSceneDef);
-
 		// 注册 SystemDef 元表
 		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableSystemDef);
+		// 注册 EntityDef 元表
+		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableEntityDef);
+		// 注册 ComponentDef 元表
+		SDE_LuaUtility::RegisterMetatable(m_pState, g_metatableComponentDef);
 
 		// 注册并设置 LightUserdata 共用元表
 		lua_pushlightuserdata(m_pState, nullptr);
 		luaL_newmetatable(m_pState, SDE_TYPE_LIGHTUSERDATA);
 		{
 			lua_pushstring(m_pState, "__index");
-			lua_newtable(m_pState);
+			lua_createtable(m_pState, 0, 4);
 			{
+				// 注册 LightUserdata 函数
+				SDE_LuaUtility::SetPackage(m_pState, g_packageLightUserdata);
 				// 注册 Scene 函数
 				SDE_LuaUtility::SetPackage(m_pState, g_packageScene);
-
 				// 注册 System 函数
 				SDE_LuaUtility::SetPackage(m_pState, g_packageSystem);
+				// 注册 Entity 函数
+				SDE_LuaUtility::SetPackage(m_pState, g_packageEntity);
+				// 注册 Component 函数
+				SDE_LuaUtility::SetPackage(m_pState, g_packageComponent);
 			}
 			lua_rawset(m_pState, -3);
+
+			// Component 赋值
+			lua_pushstring(m_pState, "__newindex");
+			lua_pushcfunction(m_pState,
+				[](lua_State* pState)->int
+				{
+					SDE_Component* pComponent = (SDE_Component*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_COMPONENT);
+
+					SDE_LuaUtility::GetRuntime(pState, pComponent->GetEntity()->GetScene()->GetName());
+					lua_pushstring(pState, SDE_TYPE_COMPONENT);
+					lua_rawget(pState, -2);
+					lua_pushstring(pState, pComponent->GetName().c_str());
+					lua_rawget(pState, -2);
+					lua_rawgeti(pState, -1, pComponent->GetRef());
+
+					lua_pushvalue(pState, 2);
+					lua_pushvalue(pState, 3);
+					lua_rawset(pState, -3);
+
+					return 0;
+				}
+			);
+			lua_rawset(m_pState, -3);
+			
 		}
 		lua_setmetatable(m_pState, -2);
 		lua_pop(m_pState, 1);
@@ -81,6 +115,14 @@ public:
 				lua_rawset(m_pState, -3);
 
 				lua_pushstring(m_pState, SDE_TYPE_SYSTEMDEF);
+				lua_newtable(m_pState);
+				lua_rawset(m_pState, -3);
+
+				lua_pushstring(m_pState, SDE_TYPE_ENTITYDEF);
+				lua_newtable(m_pState);
+				lua_rawset(m_pState, -3);
+
+				lua_pushstring(m_pState, SDE_TYPE_COMPONENTDEF);
 				lua_newtable(m_pState);
 				lua_rawset(m_pState, -3);
 			}
@@ -104,6 +146,34 @@ public:
 				lua_rawset(m_pState, -3);
 
 				lua_pushstring(m_pState, SDE_TYPE_SYSTEMDEF);
+				lua_newtable(m_pState);
+				{
+					// 使该表具有弱值
+					lua_newtable(m_pState);
+					{
+						lua_pushstring(m_pState, "__mode");
+						lua_pushstring(m_pState, "v");
+						lua_rawset(m_pState, -3);
+					}
+					lua_setmetatable(m_pState, -2);
+				}
+				lua_rawset(m_pState, -3);
+
+				lua_pushstring(m_pState, SDE_TYPE_ENTITYDEF);
+				lua_newtable(m_pState);
+				{
+					// 使该表具有弱值
+					lua_newtable(m_pState);
+					{
+						lua_pushstring(m_pState, "__mode");
+						lua_pushstring(m_pState, "v");
+						lua_rawset(m_pState, -3);
+					}
+					lua_setmetatable(m_pState, -2);
+				}
+				lua_rawset(m_pState, -3);
+
+				lua_pushstring(m_pState, SDE_TYPE_COMPONENTDEF);
 				lua_newtable(m_pState);
 				{
 					// 使该表具有弱值
@@ -171,23 +241,9 @@ bool SDE_Director::Run()
 
 	SDE_LuaUtility::GetRuntime(m_pImpl->m_pState, m_pImpl->m_pSceneRunning->GetName());
 
-	lua_pushstring(m_pImpl->m_pState, SDE_TYPE_SYSTEM);
-	lua_rawget(m_pImpl->m_pState, -2);
-	lua_remove(m_pImpl->m_pState, -2);
-
-	lua_pushstring(m_pImpl->m_pState, SDE_NAME_SYSTEM_ONUPDATE);
-	lua_rawget(m_pImpl->m_pState, -2);
-	lua_remove(m_pImpl->m_pState, -2);
-
 	while (m_pImpl->m_bIsRunning)
 	{
 		t1 = std::chrono::steady_clock::now();
-
-		lua_pushnil(m_pImpl->m_pState);
-		while (lua_next(m_pImpl->m_pState, -2))
-		{
-			lua_pcall(m_pImpl->m_pState, 0, 0, 0);
-		}
 
 		t2 = std::chrono::steady_clock::now();
 
@@ -244,8 +300,49 @@ SDE_Scene* SDE_Director::CreateScene(const SDE_SceneDef& defScene)
 {
 	void* pMem = m_pImpl->m_memoryPool.Allocate(sizeof(SDE_SceneDef));
 	SDE_Scene* pScene = new (pMem) SDE_Scene(defScene);
+
 	m_pImpl->m_mapScenePreloaded[defScene.strName] = pScene;
+
+	// 在 Lua 中为该场景创建环境
+	SDE_LuaUtility::GetRuntime(m_pImpl->m_pState);
+	lua_pushstring(m_pImpl->m_pState, defScene.strName.c_str());
+	lua_newtable(m_pImpl->m_pState);
+	{
+		// 用于储存所有 System 的表
+		lua_pushstring(m_pImpl->m_pState, SDE_TYPE_SYSTEM);
+		lua_newtable(m_pImpl->m_pState);
+		lua_rawset(m_pImpl->m_pState, -3);
+
+		// 用于储存所有 Component 的表
+		lua_pushstring(m_pImpl->m_pState, SDE_TYPE_COMPONENT);
+		lua_newtable(m_pImpl->m_pState);
+		lua_rawset(m_pImpl->m_pState, -3);
+	}
+	lua_rawset(m_pImpl->m_pState, -3);
+	lua_pop(m_pImpl->m_pState, 1);
+
 	return pScene;
+}
+
+void SDE_Director::DestroyScene(SDE_Scene* pScene)
+{
+	if (pScene == m_pImpl->m_pSceneRunning)
+	{
+		SDE_Debug::Instance().OutputInfo(
+			"You can't destroy a scene that is running.\n"
+		);
+		return;
+	}
+
+	// 将整个场景 Lua 环境连根拔起
+	SDE_LuaUtility::GetRuntime(m_pImpl->m_pState, pScene->GetName());
+	lua_pushstring(m_pImpl->m_pState, pScene->GetName().c_str());
+	lua_pushnil(m_pImpl->m_pState);
+	lua_rawset(m_pImpl->m_pState, -3);
+
+	m_pImpl->m_mapScenePreloaded.erase(pScene->GetName());
+	pScene->~SDE_Scene();
+	m_pImpl->m_memoryPool.Free(pScene, sizeof(SDE_Scene));
 }
 
 void SDE_Director::SwitchScene(SDE_Scene* pScene)
@@ -255,8 +352,12 @@ void SDE_Director::SwitchScene(SDE_Scene* pScene)
 		m_pImpl->m_pSceneRunning->~SDE_Scene();
 		m_pImpl->m_memoryPool.Free(m_pImpl->m_pSceneRunning, sizeof(SDE_Scene));
 	}
-
 	m_pImpl->m_pSceneRunning = pScene;
+}
+
+lua_State* SDE_Director::GetLuaState()
+{
+	return m_pImpl->m_pState;
 }
 
 SDE_MemoryPool* SDE_Director::GetMemoryPool()
@@ -287,77 +388,10 @@ SDE_LUA_FUNC(SDE_Director_GetScene)
 
 SDE_LUA_FUNC(SDE_Director_CreateScene)
 {
-	SDE_SceneDef* pDefScene = nullptr;
+	SDE_SceneDef* pDefScene = (SDE_SceneDef*)SDE_LuaUtility::GetLightUserdataDef(pState, 1, SDE_TYPE_SCENEDEF);
 
-	// 获取场景定义对象，并将构造函数留在栈顶
-	if (lua_type(pState, 1) == LUA_TSTRING)
-	{
-		std::string strName = lua_tostring(pState, 1);
-
-		SDE_LuaUtility::GetRegistry(pState);
-
-		lua_pushstring(pState, SDE_TYPE_SCENEDEF);
-		lua_rawget(pState, -2);
-		lua_remove(pState, -2);
-
-		lua_pushstring(pState, strName.c_str());
-		lua_rawget(pState, -2);
-		lua_remove(pState, -2);
-
-		// 如果注册表内不存在该定义
-		if (lua_type(pState, -1) == LUA_TNIL)
-			return 1;
-
-		lua_pushstring(pState, "userdata");
-		lua_rawget(pState, -2);
-		pDefScene = (SDE_SceneDef*)lua_touserdata(pState, -1);
-		lua_pop(pState, 1);
-
-		lua_pushstring(pState, "constructor");
-		lua_rawget(pState, -2);
-		lua_remove(pState, -2);
-	}
-	else
-	{
-		pDefScene = (SDE_SceneDef*)luaL_checkudata(pState, 1, SDE_TYPE_SCENEDEF);
-
-		SDE_LuaUtility::GetTemporary(pState);
-
-		lua_pushstring(pState, SDE_TYPE_SCENEDEF);
-		lua_rawget(pState, -2);
-		lua_remove(pState, -2);
-
-		lua_pushstring(pState, pDefScene->strName.c_str());
-		lua_rawget(pState, -2);
-		lua_remove(pState, -2);
-	}
-
+	if (!pDefScene) return 1;
 	SDE_Scene* pScene = SDE_Director::Instance().CreateScene(*pDefScene);
-
-	// 在 Lua 中为该场景创建环境
-	SDE_LuaUtility::GetRuntime(pState);
-	lua_pushstring(pState, pDefScene->strName.c_str());
-	lua_newtable(pState);
-	{
-		lua_pushstring(pState, SDE_TYPE_SYSTEM);
-		lua_createtable(pState, 0, 3);
-		{
-			lua_pushstring(pState, SDE_NAME_SYSTEM_ONINIT);
-			lua_newtable(pState);
-			lua_rawset(pState, -3);
-
-			lua_pushstring(pState, SDE_NAME_SYSTEM_ONUPDATE);
-			lua_newtable(pState);
-			lua_rawset(pState, -3);
-
-			lua_pushstring(pState, SDE_NAME_SYSTEM_ONQUIT);
-			lua_newtable(pState);
-			lua_rawset(pState, -3);
-		}
-		lua_rawset(pState, -3);
-	}
-	lua_rawset(pState, -3);
-	lua_pop(pState, 1);
 
 	// 根据堆栈对象决定构造函数参数个数
 	lua_pushlightuserdata(pState, pScene);
@@ -392,7 +426,7 @@ SDE_LUA_FUNC(SDE_Director_CreateSceneDef)
 	lua_rawset(pState, -3);
 
 	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_SceneDef));
-	SDE_SceneDef* pDefScene = new (pLuaMem) SDE_SceneDef{ strName };
+	SDE_SceneDef* pDefScene = new (pLuaMem) SDE_SceneDef(strName);
 	luaL_setmetatable(pState, SDE_TYPE_SCENEDEF);
 
 	return 1;
@@ -524,17 +558,189 @@ SDE_LUA_FUNC(SDE_Director_GetSystemDef)
 	return 1;
 }
 
-SDE_LuaPackage g_directorPackage =
+SDE_LUA_FUNC(SDE_Director_CreateEntityDef)
 {
-	{ "GetScene",			SDE_Director_GetScene },
-	{ "CreateScene",		SDE_Director_CreateScene },
-	{ "SwitchScene",		SDE_Director_SwitchScene },
+	std::string strName = luaL_checkstring(pState, 1);
 
-	{ "CreateSceneDef",		SDE_Director_CreateSceneDef },
-	{ "RegisterSceneDef",	SDE_Director_RegisterSceneDef },
-	{ "GetSceneDef",		SDE_Director_GetSceneDef },
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_pushvalue(pState, 2);
+	lua_rawset(pState, -3);
 
-	{ "CreateSystemDef",	SDE_Director_CreateSystemDef },
-	{ "RegisterSystemDef",	SDE_Director_RegisterSystemDef },
-	{ "GetSystemDef",		SDE_Director_GetSystemDef }
+	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_EntityDef));
+	SDE_EntityDef* pEntityDef = new (pLuaMem) SDE_EntityDef(strName);
+	luaL_setmetatable(pState, SDE_TYPE_ENTITYDEF);
+
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_RegisterEntityDef)
+{
+	SDE_EntityDef* pDefEntity = (SDE_EntityDef*)luaL_checkudata(pState, 1, SDE_TYPE_ENTITYDEF);
+
+	if (pDefEntity->bIsRegistered)
+		return 0;
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+	lua_rawget(pState, -2);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+	lua_rawget(pState, -2);
+
+	lua_pushstring(pState, pDefEntity->strName.c_str());
+	lua_createtable(pState, 0, 2);
+	{
+		lua_pushstring(pState, "userdata");
+		lua_pushvalue(pState, 1);
+		lua_rawset(pState, -3);
+
+		lua_pushstring(pState, "constructor");
+		lua_pushstring(pState, pDefEntity->strName.c_str());
+		lua_rawget(pState, -7);
+		lua_rawset(pState, -3);
+
+		// 清除 Temporary 中的 constructor
+		lua_pushstring(pState, pDefEntity->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -7);
+	}
+	lua_rawset(pState, -3);
+
+	pDefEntity->bIsRegistered = true;
+
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_Director_GetEntityDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, "userdata");
+	lua_rawget(pState, -2);
+
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_CreateComponentDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_COMPONENTDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_pushvalue(pState, 2);
+	lua_rawset(pState, -3);
+
+	void* pLuaMem = lua_newuserdata(pState, sizeof(SDE_ComponentDef));
+	SDE_ComponentDef* pComponentDef = new (pLuaMem) SDE_ComponentDef(strName);
+	luaL_setmetatable(pState, SDE_TYPE_COMPONENTDEF);
+
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_Director_RegisterComponentDef)
+{
+	SDE_ComponentDef* pDefComponent = (SDE_ComponentDef*)luaL_checkudata(pState, 1, SDE_TYPE_COMPONENTDEF);
+
+	if (pDefComponent->bIsRegistered)
+		return 0;
+
+	SDE_LuaUtility::GetTemporary(pState);
+	lua_pushstring(pState, SDE_TYPE_COMPONENTDEF);
+	lua_rawget(pState, -2);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_COMPONENTDEF);
+	lua_rawget(pState, -2);
+
+	lua_pushstring(pState, pDefComponent->strName.c_str());
+	lua_createtable(pState, 0, 2);
+	{
+		lua_pushstring(pState, "userdata");
+		lua_pushvalue(pState, 1);
+		lua_rawset(pState, -3);
+
+		lua_pushstring(pState, "constructor");
+		lua_pushstring(pState, pDefComponent->strName.c_str());
+		lua_rawget(pState, -7);
+		lua_rawset(pState, -3);
+
+		// 清除 Temporary 中的 constructor
+		lua_pushstring(pState, pDefComponent->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -7);
+	}
+	lua_rawset(pState, -3);
+
+	pDefComponent->bIsRegistered = true;
+
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_Director_GetComponentDef)
+{
+	std::string strName = luaL_checkstring(pState, 1);
+
+	SDE_LuaUtility::GetRegistry(pState);
+	lua_pushstring(pState, SDE_TYPE_COMPONENTDEF);
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, strName.c_str());
+	lua_rawget(pState, -2);
+	lua_pushstring(pState, "userdata");
+	lua_rawget(pState, -2);
+
+	return 1;
+}
+
+SDE_LuaPackage g_packageDirector =
+{
+	{ "GetScene",				SDE_Director_GetScene },
+	{ "CreateScene",			SDE_Director_CreateScene },
+	{ "SwitchScene",			SDE_Director_SwitchScene },
+
+	{ "CreateSceneDef",			SDE_Director_CreateSceneDef },
+	{ "RegisterSceneDef",		SDE_Director_RegisterSceneDef },
+	{ "GetSceneDef",			SDE_Director_GetSceneDef },
+
+	{ "CreateSystemDef",		SDE_Director_CreateSystemDef },
+	{ "RegisterSystemDef",		SDE_Director_RegisterSystemDef },
+	{ "GetSystemDef",			SDE_Director_GetSystemDef },
+
+	{ "CreateEntityDef",		SDE_Director_CreateEntityDef },
+	{ "RegisterEntityDef",		SDE_Director_RegisterEntityDef },
+	{ "GetEntityDef",			SDE_Director_GetEntityDef },
+
+	{ "CreateComponentDef",		SDE_Director_CreateComponentDef },
+	{ "RegisterComponentDef",	SDE_Director_RegisterComponentDef },
+	{ "GetComponentDef",		SDE_Director_GetComponentDef }
+};
+
+SDE_LUA_FUNC(SDE_LightUserdata_GetType)
+{
+	SDE_LuaLightUserdata* pLightUserdata = (SDE_LuaLightUserdata*)luaL_checkudata(pState, 1, SDE_TYPE_LIGHTUSERDATA);
+	lua_pushstring(pState, pLightUserdata->GetTypeLU().c_str());
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_LightUserdata_GetName)
+{
+	SDE_LuaLightUserdata* pLightUserdata = (SDE_LuaLightUserdata*)luaL_checkudata(pState, 1, SDE_TYPE_LIGHTUSERDATA);
+	lua_pushstring(pState, pLightUserdata->GetName().c_str());
+	return 1;
+}
+
+SDE_LuaPackage g_packageLightUserdata =
+{
+	{ "GetType", SDE_LightUserdata_GetType },
+	{ "GetName", SDE_LightUserdata_GetName }
 };

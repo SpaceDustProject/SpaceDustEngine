@@ -7,6 +7,7 @@
 
 class SDE_Data;
 
+struct lua_State;
 struct SDE_LuaReg;
 class SDE_LuaPackage;
 
@@ -27,10 +28,13 @@ public:
 	void				RunScene(const std::string& strName);		// 运行场景
 	void				RunScene(const SDE_SceneDef& defScene);		// 创建并运行场景
 
+	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 根据定义创建场景
+	void				DestroyScene(SDE_Scene* pScene);			// 摧毁某个场景
+
 	SDE_Scene*			GetScene();									// 获取当前正在运行的场景
-	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 创建场景
 	void				SwitchScene(SDE_Scene* pScene);				// 切换当前场景
 
+	lua_State*			GetLuaState();
 	SDE_MemoryPool*		GetMemoryPool();
 	SDE_Blackboard*		GetBlackboard();
 
@@ -52,6 +56,6 @@ private:
 	SDE_Director();
 };
 
-extern SDE_LuaPackage g_directorPackage;
+extern SDE_LuaPackage g_packageDirector;
 
 #endif // !_SDE_DIRECTOR_H_

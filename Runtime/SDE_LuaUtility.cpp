@@ -159,6 +159,54 @@ void* SDE_LuaUtility::GetLightUserdata(lua_State* pState, int nIndex, const std:
 	return pLightUserdata;
 }
 
+void* SDE_LuaUtility::GetLightUserdataDef(lua_State* pState, int nIndex, const std::string& strType)
+{
+	SDE_LuaLightUserdataDef* pDefLightUserdata = nullptr;
+
+	if (lua_type(pState, nIndex) == LUA_TSTRING)
+	{
+		std::string strName = lua_tostring(pState, nIndex);
+
+		SDE_LuaUtility::GetRegistry(pState);
+
+		lua_pushstring(pState, strType.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		lua_pushstring(pState, strName.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		// 如果注册表内不存在该定义
+		if (lua_type(pState, -1) == LUA_TNIL)
+			return nullptr;
+
+		lua_pushstring(pState, "userdata");
+		lua_rawget(pState, -2);
+		pDefLightUserdata = (SDE_LuaLightUserdataDef*)lua_touserdata(pState, -1);
+		lua_pop(pState, 1);
+
+		lua_pushstring(pState, "constructor");
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+	}
+	else
+	{
+		pDefLightUserdata = (SDE_LuaLightUserdataDef*)luaL_checkudata(pState, nIndex, strType.c_str());
+
+		SDE_LuaUtility::GetTemporary(pState);
+
+		lua_pushstring(pState, strType.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+
+		lua_pushstring(pState, pDefLightUserdata->strName.c_str());
+		lua_rawget(pState, -2);
+		lua_remove(pState, -2);
+	}
+	return pDefLightUserdata;
+}
+
 void SDE_LuaUtility::CheckStack(lua_State* pState)
 {
 	for (int i = 1; i <= lua_gettop(pState); i++)
