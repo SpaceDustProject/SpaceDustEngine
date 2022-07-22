@@ -21,8 +21,8 @@ class SDE_Component : public SDE_LuaLightUserdata
 {
 public:
 	SDE_Entity*		GetEntity();
-	long long		GetRef();
 
+	long long		GetRef();
 	void			SetRef(long long nRef);
 
 private:

@@ -58,7 +58,7 @@ bool SDE_LuaUtility::RunScript(lua_State* pState, const SDE_Data& dataScript)
 	switch (luaL_loadstring(pState, dataScript.GetData()))
 	{
 	case LUA_OK:
-		lua_pcall(pState, 0, LUA_MULTRET, 0);
+		lua_call(pState, 0, LUA_MULTRET);
 		return true;
 
 	case LUA_ERRSYNTAX:

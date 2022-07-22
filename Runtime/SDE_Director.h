@@ -25,14 +25,16 @@ public:
 
 	bool				RunScript(const SDE_Data& dataScript);		// 运行脚本
 
-	void				RunScene(const std::string& strName);		// 运行场景
+	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 根据定义创建场景
+	void				DestroyScene(SDE_Scene* pScene);			// 摧毁指定场景
+
 	void				RunScene(const SDE_SceneDef& defScene);		// 创建并运行场景
 
-	SDE_Scene*			CreateScene(const SDE_SceneDef& defScene);	// 根据定义创建场景
-	void				DestroyScene(SDE_Scene* pScene);			// 摧毁某个场景
+	void				PreloadScene(const SDE_SceneDef& defScene);	// 根据定义预创建场景
+	void				RunScene(const std::string& strName);		// 运行场景
+	SDE_Scene*			GetScene(const std::string& strName);		// 获取预加载场景
 
-	SDE_Scene*			GetScene();									// 获取当前正在运行的场景
-	void				SwitchScene(SDE_Scene* pScene);				// 切换当前场景
+	SDE_Scene*			GetRunningScene();							// 获取当前正在运行的场景
 
 	lua_State*			GetLuaState();
 	SDE_MemoryPool*		GetMemoryPool();

@@ -30,13 +30,24 @@ struct SDE_SceneDef : SDE_LuaLightUserdataDef
 class SDE_Scene : public SDE_LuaLightUserdata
 {
 public:
+	void				Step();
+
 	SDE_Entity*			CreateEntity(const SDE_EntityDef& defEntity);
 	void				DestroyEntity(SDE_Entity* pEntity);
 
 	SDE_System*			CreateSystem(const SDE_SystemDef& defSystem);
 	void				DestroySystem(SDE_System* pSystem);
 
+	void				AddComponent(SDE_Component* pComponent);
+	void				DeleteComponent(SDE_Component* pComponent);
+
 	SDE_MemoryPool*		GetMemoryPool();
+
+	// 将某系统从独立系统列表中移除，依赖于某个系统运行
+	void				RemoveSystemFromList(SDE_System* pSystem);
+
+	// 遍历指定类型的组件并将其作为参数调用堆栈上指定索引处的函数
+	void				ForeachComponent(const std::string& strName, void(*funcCalled)(SDE_Component*));
 
 private:
 	class Impl;

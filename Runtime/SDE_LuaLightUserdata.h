@@ -33,7 +33,7 @@ public:
 		m_strName = strName;
 	}
 
-private:
+protected:
 	std::string m_strTypeLU;
 	std::string m_strName;
 

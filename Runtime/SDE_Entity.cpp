@@ -37,7 +37,10 @@ SDE_Component* SDE_Entity::CreateComponent(const SDE_ComponentDef& defComponent)
 	}
 	void* pMem = m_pImpl->m_pScene->GetMemoryPool()->Allocate(sizeof(SDE_Component));
 	SDE_Component* pComponent = new (pMem) SDE_Component(this, defComponent);
+
 	m_pImpl->m_mapComponent[defComponent.strName] = pComponent;
+	m_pImpl->m_pScene->AddComponent(pComponent);
+
 	return pComponent;
 }
 
@@ -48,6 +51,10 @@ void SDE_Entity::DestroyComponent(SDE_Component* pComponent)
 	{
 		return;
 	}
+
+	m_pImpl->m_mapComponent.erase(pComponent->GetName());
+	m_pImpl->m_pScene->DeleteComponent(pComponent);
+
 	pComponent->~SDE_Component();
 	m_pImpl->m_pScene->GetMemoryPool()->Free(pComponent, sizeof(SDE_Component));
 }
@@ -66,6 +73,7 @@ SDE_Entity::SDE_Entity(SDE_Scene* pScene, const SDE_EntityDef& defEntity)
 	void* pMem = pScene->GetMemoryPool()->Allocate(sizeof(Impl));
 	m_pImpl = new (pMem) Impl(defEntity);
 
+	SetName(defEntity.strName);
 	m_pImpl->m_pScene = pScene;
 }
 
@@ -83,11 +91,46 @@ SDE_Entity::~SDE_Entity()
 	m_pImpl->m_pScene->GetMemoryPool()->Free(m_pImpl, sizeof(Impl));
 }
 
+SDE_LUA_FUNC(SDE_EntityDef_GetName)
+{
+	SDE_EntityDef* pDefEntity = (SDE_EntityDef*)luaL_checkudata(pState, 1, SDE_TYPE_ENTITYDEF);
+	lua_pushstring(pState, pDefEntity->strName.c_str());
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_EntityDef_SetConstructor)
+{
+	SDE_EntityDef* pDefEntity = (SDE_EntityDef*)luaL_checkudata(pState, 1, SDE_TYPE_ENTITYDEF);
+
+	if (pDefEntity->bIsRegistered)
+	{
+		SDE_LuaUtility::GetRegistry(pState);
+		lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefEntity->strName.c_str());
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, "constructor");
+		lua_pushvalue(pState, 2);
+		lua_rawset(pState, -3);
+	}
+	else
+	{
+		SDE_LuaUtility::GetTemporary(pState);
+		lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefEntity->strName.c_str());
+		lua_pushvalue(pState, 2);
+		lua_rawset(pState, -3);
+	}
+	return 0;
+}
+
 SDE_LuaMetatable g_metatableEntityDef =
 {
 	SDE_TYPE_ENTITYDEF,
 	{
-
+		{ "GetName",		SDE_EntityDef_GetName },
+		{ "SetConstructor",	SDE_EntityDef_SetConstructor }
 	},
 
 	[](lua_State* pState)->int
@@ -106,28 +149,6 @@ SDE_LUA_FUNC(SDE_Entity_CreateComponent)
 	if (!pDefComponent) return 1;
 	SDE_Component* pComponent = pEntity->CreateComponent(*pDefComponent);
 
-	SDE_LuaUtility::GetRuntime(pState, pEntity->GetScene()->GetName());
-	lua_pushstring(pState, SDE_TYPE_COMPONENT);
-	lua_rawget(pState, -2);
-	lua_pushstring(pState, pComponent->GetName().c_str());
-	lua_rawget(pState, -2);
-
-	// 若当前没有符合该组件的容器，则新建一个容器
-	if (lua_type(pState, -1) == LUA_TNIL)
-	{
-		lua_pop(pState, 1);
-
-		lua_pushstring(pState, pComponent->GetName().c_str());
-		lua_newtable(pState);
-		lua_rawset(pState, -3);
-
-		lua_pushstring(pState, pComponent->GetName().c_str());
-		lua_rawget(pState, -2);
-	}
-	lua_newtable(pState);
-	pComponent->SetRef(luaL_ref(pState, -2));
-	lua_pop(pState, 3);
-
 	lua_pushlightuserdata(pState, pComponent);
 
 	// 根据堆栈对象决定构造函数参数个数
@@ -145,14 +166,14 @@ SDE_LUA_FUNC(SDE_Entity_CreateComponent)
 SDE_LUA_FUNC(SDE_Entity_DestroyComponent)
 {
 	SDE_Entity* pEntity = (SDE_Entity*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_ENTITY);
-	SDE_Component* pComponent = (SDE_Component*)SDE_LuaUtility::GetLightUserdata(pState, 2, SDE_TYPE_COMPONENT);
+	SDE_Component* pComponent = nullptr;
 
-	SDE_LuaUtility::GetRuntime(pState, pEntity->GetScene()->GetName().c_str());
-	lua_pushstring(pState, SDE_TYPE_COMPONENT);
-	lua_rawget(pState, -2);
-	lua_pushstring(pState, pComponent->GetName().c_str());
-	lua_rawget(pState, -2);
-	luaL_unref(pState, -1, pComponent->GetRef());
+	if (lua_type(pState, 2) == LUA_TSTRING)
+	{
+		std::string strName = lua_tostring(pState, 2);
+		pComponent = pEntity->GetComponent(strName);
+	}
+	else pComponent = (SDE_Component*)SDE_LuaUtility::GetLightUserdata(pState, 2, SDE_TYPE_COMPONENT);
 
 	pEntity->DestroyComponent(pComponent);
 	return 0;

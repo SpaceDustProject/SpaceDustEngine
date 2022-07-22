@@ -24,22 +24,29 @@ struct SDE_SystemDef : SDE_LuaLightUserdataDef
 class SDE_System : public SDE_LuaLightUserdata
 {
 public:
-	SDE_Scene*			GetScene();
+	SDE_Scene*	GetScene();
 
-	long long			GetInitRef();
-	long long			GetUpdateRef();
-	long long			GetQuitRef();
+	long long	GetStartRef();
+	long long	GetUpdateRef();
+	long long	GetStopRef();
+	SDE_System* GetNextSystem();
 
-	void				SetInitRef(long long nRef);
-	void				SetUpdateRef(long long nRef);
-	void				SetQuitRef(long long nRef);
+	void		SetStartRef(long long nRef);
+	void		SetUpdateRef(long long nRef);
+	void		SetStopRef(long long nRef);
+	void		SetNextSystem(SDE_System* pSystem);
+
+	bool		IsRunning();
 
 private:
 	SDE_Scene*	m_pScene;
 
-	long long	m_nRefInit;
+	long long	m_nRefStart;
 	long long	m_nRefUpdate;
-	long long	m_nRefQuit;
+	long long	m_nRefStop;
+
+	bool		m_bIsRunning;
+	SDE_System* m_pSystemNext;
 
 private:
 	SDE_System(SDE_Scene* pScene, const SDE_SystemDef& defSystem);
