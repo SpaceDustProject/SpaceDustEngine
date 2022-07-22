@@ -260,6 +260,14 @@ SDE_LuaMetatable g_metatableSceneDef =
 	[](lua_State* pState)->int
 	{
 		SDE_SceneDef* pDefScene = (SDE_SceneDef*)luaL_checkudata(pState, 1, SDE_TYPE_SCENEDEF);
+
+		SDE_LuaUtility::GetTemporary(pState);
+		lua_pushstring(pState, SDE_TYPE_SCENEDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefScene->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -3);
+
 		pDefScene->~SDE_SceneDef();
 		return 0;
 	}

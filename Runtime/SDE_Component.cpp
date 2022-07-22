@@ -96,8 +96,16 @@ SDE_LuaMetatable g_metatableComponentDef =
 
 	[](lua_State* pState)->int
 	{
-		SDE_ComponentDef* pComponent = (SDE_ComponentDef*)luaL_checkudata(pState, 1, SDE_TYPE_COMPONENTDEF);
-		pComponent->~SDE_ComponentDef();
+		SDE_ComponentDef* pDefComponent = (SDE_ComponentDef*)luaL_checkudata(pState, 1, SDE_TYPE_COMPONENTDEF);
+
+		SDE_LuaUtility::GetTemporary(pState);
+		lua_pushstring(pState, SDE_TYPE_COMPONENTDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefComponent->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -3);
+
+		pDefComponent->~SDE_ComponentDef();
 		return 0;
 	}
 };

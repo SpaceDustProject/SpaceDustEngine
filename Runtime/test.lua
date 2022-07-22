@@ -1,16 +1,13 @@
 print("Here is SDE_test.lua")
 
+local TestDLL = require("TestDLL")
+
 local systemDef = SDE_Director.CreateSystemDef(
     "testSystem",
     function (system, args)
         system:SetUpdateFunc(
             function (system)
-                system:ForeachComponent(
-                    "testComponent",
-                    function (component)
-                        print(component:GetValue("x"))
-                    end
-                )
+                print(TestDLL.Subtraction(2, 3))
             end
         )
     end

@@ -136,6 +136,14 @@ SDE_LuaMetatable g_metatableEntityDef =
 	[](lua_State* pState)->int
 	{
 		SDE_EntityDef* pDefEntity = (SDE_EntityDef*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_ENTITYDEF);
+
+		SDE_LuaUtility::GetTemporary(pState);
+		lua_pushstring(pState, SDE_TYPE_ENTITYDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefEntity->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -3);
+
 		pDefEntity->~SDE_EntityDef();
 		return 0;
 	}

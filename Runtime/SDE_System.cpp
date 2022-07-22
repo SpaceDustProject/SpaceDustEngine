@@ -137,6 +137,14 @@ SDE_LuaMetatable g_metatableSystemDef =
 	[](lua_State* pState)->int
 	{
 		SDE_SystemDef* pDefSystem = (SDE_SystemDef*)luaL_checkudata(pState, 1, SDE_TYPE_SYSTEMDEF);
+
+		SDE_LuaUtility::GetTemporary(pState);
+		lua_pushstring(pState, SDE_TYPE_SYSTEMDEF);
+		lua_rawget(pState, -2);
+		lua_pushstring(pState, pDefSystem->strName.c_str());
+		lua_pushnil(pState);
+		lua_rawset(pState, -3);
+
 		pDefSystem->~SDE_SystemDef();
 		return 0;
 	}
