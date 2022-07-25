@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header">
+      <UniqueIdentifier>{eaef7b36-ed7a-4f4c-a6ed-d81704ca6425}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{37144d5e-6d9e-4cd2-8027-fc7c2e9ffc83}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="imconfig.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_sdl.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_sdlrenderer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_rectpack.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_textedit.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_truetype.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="imgui.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_demo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_draw.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_sdl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_sdlrenderer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_tables.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_widgets.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
