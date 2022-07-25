@@ -63,6 +63,11 @@ bool SDE_System::IsRunning()
 	return m_bIsRunning;
 }
 
+void SDE_System::SetIsRunning(bool bIsRunning)
+{
+	m_bIsRunning = bIsRunning;
+}
+
 SDE_System::SDE_System(SDE_Scene* pScene, const SDE_SystemDef& defSystem)
 	: SDE_LuaLightUserdata(SDE_TYPE_SYSTEM)
 {
@@ -150,6 +155,61 @@ SDE_LuaMetatable g_metatableSystemDef =
 	}
 };
 
+SDE_LUA_FUNC(SDE_System_GetScene)
+{
+	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
+	lua_pushlightuserdata(pState, pSystem->GetScene());
+	return 1;
+}
+
+SDE_LUA_FUNC(SDE_System_Start)
+{
+	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
+
+	if (!pSystem->IsRunning() && pSystem->GetStartRef() != LUA_NOREF)
+	{
+		pSystem->SetIsRunning(true);
+
+		SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
+		lua_pushstring(pState, SDE_TYPE_SYSTEM);
+		lua_rawget(pState, -2);
+		lua_rawgeti(pState, -1, pSystem->GetStartRef());
+		lua_pushlightuserdata(pState, pSystem);
+		
+		if (lua_pcall(pState, 1, 0, 0))
+		{
+			SDE_Debug::Instance().OutputError(
+				"%s\n", lua_tostring(pState, -1)
+			);
+		}
+	}
+	return 0;
+}
+
+SDE_LUA_FUNC(SDE_System_Stop)
+{
+	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
+
+	if (pSystem->IsRunning() && pSystem->GetStopRef() != LUA_NOREF)
+	{
+		pSystem->SetIsRunning(false);
+
+		SDE_LuaUtility::GetRuntime(pState, pSystem->GetScene()->GetName());
+		lua_pushstring(pState, SDE_TYPE_SYSTEM);
+		lua_rawget(pState, -2);
+		lua_rawgeti(pState, -1, pSystem->GetStopRef());
+		lua_pushlightuserdata(pState, pSystem);
+
+		if (lua_pcall(pState, 1, 0, 0))
+		{
+			SDE_Debug::Instance().OutputError(
+				"%s\n", lua_tostring(pState, -1)
+			);
+		}
+	}
+	return 0;
+}
+
 SDE_LUA_FUNC(SDE_System_ForeachComponent)
 {
 	SDE_System* pSystem = (SDE_System*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SYSTEM);
@@ -160,20 +220,18 @@ SDE_LUA_FUNC(SDE_System_ForeachComponent)
 		[](SDE_Component* pComponent)
 		{
 			lua_State* pState = SDE_Director::Instance().GetLuaState();
-			
+
 			lua_pushvalue(pState, 3);
 			lua_pushlightuserdata(pState, pComponent);
-			
+
 			if (lua_pcall(pState, 1, 0, 0))
 			{
-				SDE_Debug::Instance().OutputInfo(
+				SDE_Debug::Instance().OutputError(
 					"%s\n", lua_tostring(pState, -1)
 				);
-				return;
 			}
 		}
 	);
-
 	return 0;
 }
 
@@ -293,6 +351,10 @@ SDE_LUA_FUNC(SDE_System_SetNextSystem)
 
 SDE_LuaPackage g_packageSystem =
 {
+	{ "Start",				SDE_System_Start },
+	{ "Stop",				SDE_System_Stop },
+	{ "GetScene",			SDE_System_GetScene },
+
 	{ "ForeachComponent",	SDE_System_ForeachComponent },
 
 	{ "GetStartFunc",		SDE_System_GetStartFunc },

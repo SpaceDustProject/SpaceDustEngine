@@ -37,6 +37,7 @@ public:
 
 	SDE_System*			CreateSystem(const SDE_SystemDef& defSystem);
 	void				DestroySystem(SDE_System* pSystem);
+	SDE_System*			GetSystem(const std::string& strName);
 
 	void				AddComponent(SDE_Component* pComponent);
 	void				DeleteComponent(SDE_Component* pComponent);

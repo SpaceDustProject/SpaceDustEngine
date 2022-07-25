@@ -39,6 +39,7 @@ public:
 		luaL_openlibs(m_pState);
 		lua_gc(m_pState, LUA_GCINC, 100);
 
+		// зЂВс SDE_Director
 		lua_newtable(m_pState);
 		SDE_LuaUtility::SetPackage(m_pState, g_packageDirector);
 		lua_setglobal(m_pState, SDE_NAME_DIRECTOR);
@@ -133,7 +134,6 @@ public:
 		{
 			delete m_pSceneRunning;
 		}
-
 		lua_close(m_pState);
 	}
 };
@@ -195,6 +195,23 @@ bool SDE_Director::Run()
 		{
 			std::this_thread::sleep_for(dSleepTime);
 		}
+
+		SDE_LuaUtility::GetGlobal(pState);
+		lua_pushstring(pState, SDE_NAME_FUNCAFTERSLEEP);
+		lua_rawget(pState, -2);
+		
+		if (lua_type(pState, -1) != LUA_TNIL)
+		{
+			if (lua_pcall(pState, 0, 0, 0))
+			{
+				SDE_Debug::Instance().OutputError(
+					"%s\n", lua_tostring(pState, -1)
+				);
+			}
+		}
+		else lua_pop(pState, 1);
+
+		lua_pop(pState, 1);
 
 		t3 = std::chrono::steady_clock::now();
 		dActualTime = t3 - t1;
@@ -647,6 +664,16 @@ SDE_LUA_FUNC(SDE_Director_GetComponentDef)
 	return 1;
 }
 
+SDE_LUA_FUNC(SDE_Director_SetFuncAfterSleep)
+{
+	SDE_LuaUtility::GetGlobal(pState);
+	lua_pushstring(pState, SDE_NAME_FUNCAFTERSLEEP);
+	lua_pushvalue(pState, 1);
+	lua_rawset(pState, -3);
+
+	return 0;
+}
+
 SDE_LuaPackage g_packageDirector =
 {
 	{ "GetRunningScene",		SDE_Director_GetRunningScene },
@@ -667,7 +694,9 @@ SDE_LuaPackage g_packageDirector =
 
 	{ "CreateComponentDef",		SDE_Director_CreateComponentDef },
 	{ "RegisterComponentDef",	SDE_Director_RegisterComponentDef },
-	{ "GetComponentDef",		SDE_Director_GetComponentDef }
+	{ "GetComponentDef",		SDE_Director_GetComponentDef },
+
+	{ "SetFuncAfterSleep",		SDE_Director_SetFuncAfterSleep }
 };
 
 SDE_LUA_FUNC(SDE_LightUserdata_GetType)

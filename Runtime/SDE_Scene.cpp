@@ -147,6 +147,14 @@ void SDE_Scene::DestroySystem(SDE_System* pSystem)
 	m_pImpl->m_memoryPool.Free(pSystem, sizeof(SDE_System));
 }
 
+SDE_System* SDE_Scene::GetSystem(const std::string& strName)
+{
+	if (m_pImpl->m_mapSystem.find(strName) == m_pImpl->m_mapSystem.end())
+		return nullptr;
+
+	return m_pImpl->m_mapSystem[strName];
+}
+
 void SDE_Scene::AddComponent(SDE_Component* pComponent)
 {
 	m_pImpl->m_mapComponent[pComponent->GetName()].insert(pComponent);
@@ -273,6 +281,14 @@ SDE_LuaMetatable g_metatableSceneDef =
 	}
 };
 
+SDE_LUA_FUNC(SDE_Scene_GetSystem)
+{
+	SDE_Scene* pScene = (SDE_Scene*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SCENE);
+	std::string strName = luaL_checkstring(pState, 2);
+	lua_pushlightuserdata(pState, pScene->GetSystem(strName));
+	return 1;
+}
+
 SDE_LUA_FUNC(SDE_Scene_CreateEntity)
 {
 	SDE_Scene* pScene = (SDE_Scene*)SDE_LuaUtility::GetLightUserdata(pState, 1, SDE_TYPE_SCENE);
@@ -335,6 +351,8 @@ SDE_LUA_FUNC(SDE_Scene_DestroySystem)
 
 SDE_LuaPackage g_packageScene =
 {
+	{ "GetSystem",		SDE_Scene_GetSystem },
+
 	{ "CreateEntity",	SDE_Scene_CreateEntity },
 	{ "DestroyEntity",	SDE_Scene_DestroyEntity },
 

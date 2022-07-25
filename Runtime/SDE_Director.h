@@ -1,7 +1,8 @@
 #ifndef _SDE_DIRECTOR_H_
 #define _SDE_DIRECTOR_H_
 
-#define SDE_NAME_DIRECTOR "SDE_Director"
+#define SDE_NAME_DIRECTOR		"SDE_Director"
+#define SDE_NAME_FUNCAFTERSLEEP	"SDE_FuncAfterSleep"
 
 #include <string>
 

@@ -37,6 +37,7 @@ public:
 	void		SetNextSystem(SDE_System* pSystem);
 
 	bool		IsRunning();
+	void		SetIsRunning(bool bIsRunning);
 
 private:
 	SDE_Scene*	m_pScene;

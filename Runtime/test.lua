@@ -1,13 +1,46 @@
 print("Here is SDE_test.lua")
 
-local TestDLL = require("TestDLL")
+local Ether = require("Ether")
 
-local systemDef = SDE_Director.CreateSystemDef(
+local testSystemDef = SDE_Director.CreateSystemDef(
     "testSystem",
+    function (system, args)
+        system:SetStartFunc(
+            function (system)
+                print("system start")
+            end
+        )
+
+        system:SetUpdateFunc(
+            function (system)
+                print("update")
+            end
+        )
+
+        system:SetStopFunc(
+            function (system)
+                print("system stop")
+            end
+        )
+    end
+)
+
+local inputSystemDef = SDE_Director.CreateSystemDef(
+    "InputSystem",
     function (system, args)
         system:SetUpdateFunc(
             function (system)
-                print(TestDLL.Subtraction(2, 3))
+                while Ether.Input.UpdateEvent() do
+                    if Ether.Input.GetEventType() == Ether.Input.EVENT_QUIT then
+                        print("bye bye")
+                    elseif Ether.Input.GetEventType() == Ether.Input.EVENT_MOUSEBTNUP then
+                        if Ether.Input.GetMouseButtonID() == Ether.Input.MOUSEBTN_LEFT then
+                            system:GetScene():GetSystem("testSystem"):Start()
+                        elseif Ether.Input.GetMouseButtonID() == Ether.Input.MOUSEBTN_RIGHT then
+                            system:GetScene():GetSystem("testSystem"):Stop()
+                        end 
+                    end
+                end
             end
         )
     end
@@ -22,20 +55,12 @@ local componentDef = SDE_Director.CreateComponentDef(
     end
 )
 
-local entityDef = SDE_Director.CreateEntityDef(
-    "testEntity",
-    function (entity, args)
-        entity:CreateComponent(componentDef, { x = args.x, y = args.y, angle = args.angle })
-    end
-)
-
 local sceneDef = SDE_Director.CreateSceneDef(
     "testScene",
     function (scene, args)
-        for i = 1, 10, 1 do
-            scene:CreateEntity(entityDef, { x = i * 3, y = i * 6, angle = i * 15.0 })
-        end
-        scene:CreateSystem(systemDef)
+        Ether.Window.Create("testWindow", { x = Ether.Window.DEFAULT_POS, y = Ether.Window.DEFAULT_POS, w = 800, h = 600 })
+        scene:CreateSystem(inputSystemDef)
+        scene:CreateSystem(testSystemDef)
     end
 )
 
